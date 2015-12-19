@@ -1,0 +1,37 @@
+project(ChatServer)
+cmake_minimum_required(VERSION 2.8)
+cmake_policy(SET CMP0015 NEW)
+aux_source_directory(. SRC_LIST)
+file(GLOB SRC . *.cpp)
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+elseif(COMPILER_SUPPORTS_CXX0X)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+else()
+		message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
+
+SET(Boost_USE_STATIC_LIBS OFF)
+SET(Boost_USE_MULTITHREAD ON)
+FIND_PACKAGE(Boost 1.42.0 REQUIRED COMPONENTS system thread regex)
+IF(Boost_FOUND)
+  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+  LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+ENDIF(Boost_FOUND)
+
+FIND_PACKAGE(OpenSSL REQUIRED)
+IF(OPENSSL_FOUND)
+  INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
+  LINK_DIRECTORIES(${OPENSSL_LIBRARIES})
+ENDIF(OPENSSL_FOUND)
+
+INCLUDE_DIRECTORIES(lib/websocketpp/)
+INCLUDE_DIRECTORIES(lib/rapidjson/include/)
+
+add_executable(${PROJECT_NAME} ${SRC_LIST})
+
+target_link_libraries( ${PROJECT_NAME} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
