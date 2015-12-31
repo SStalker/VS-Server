@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="13.3">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>650</x>
+      <y>70</y>
+      <w>210</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>Client
+--
+-server:Server
+-session:int
+-status:string
+-isAdmin:bool?????
+-Friendlist:Collection&lt;Client&gt;
+-Blocklist:Collection&lt;Client&gt;
+--
+-login(string, hash)
+-logout()
+-sendmessage(int, int, string)
+-addFriend(int)
+-removeFriend(int)
+-blockClient(int)
+-changeStatus(string)
+-decodeBase64(string)???????
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>650</x>
+      <y>480</y>
+      <w>210</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>Message_Parser
+--
++parseMessage(string)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>650</x>
+      <y>560</y>
+      <w>210</w>
+      <h>270</h>
+    </coordinates>
+    <panel_attributes>Datenbank
+--
+-connection:Connection
+--
++registerClient()
++addFriend()
++removeFriend()
++createChatroom()
++removeChatroom()
++chatroomAddClient()
++chatroomRemoveClient()
++chatroomNewMessage()
++newMessage()
++setStatus()
++setOperator()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>230</x>
+      <y>380</y>
+      <w>120</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>Server
+--
+--
++run()
++on_message()
++on_open()
++on_clode()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>340</x>
+      <y>140</y>
+      <w>330</w>
+      <h>270</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;
+Collection: Clients
+r2=0..*
+</panel_attributes>
+    <additional_attributes>10.0;250.0;310.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>340</x>
+      <y>430</y>
+      <w>330</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-
+Perser:Parser
+r1=1</panel_attributes>
+    <additional_attributes>310.0;80.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>340</x>
+      <y>500</y>
+      <w>330</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-
+
+
+Datenbank:DBO
+r1=1</panel_attributes>
+    <additional_attributes>310.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>650</x>
+      <y>350</y>
+      <w>210</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>Chatroom
+--
+-clientlist:Collection&lt;Client&gt;
+-id:int
+--
++addClient()
++removeClient()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>340</x>
+      <y>390</y>
+      <w>330</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;
+Collection:Chatrooms
+r2=0..*</panel_attributes>
+    <additional_attributes>10.0;30.0;310.0;20.0</additional_attributes>
+  </element>
+</diagram>
