@@ -1,49 +1,31 @@
+#include "Server.h"
 
-#include <iostream>
-#include <map>
-#include <exception>
-#include <websocketpp/config/asio_no_tls.hpp>
-#include <websocketpp/config/asio.hpp>
-#include <websocketpp/server.hpp>
+	
+/*	WSServer::WSServer(){
 
-#include <rapidjson/document.h>
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+	}
 
+	void WSServer::run(){}
+	void WSServer::on_open(connection_hdl hdl){}
+	void WSServer::on_close(connection_hdl hdl){}
+	void WSServer::on_message(connection_hdl hdl, server::message_ptr msg){}
+	*/
 
-typedef websocketpp::server<websocketpp::config::asio> server;
-typedef websocketpp::server<websocketpp::config::asio_tls> server_tls;
-
-using websocketpp::connection_hdl;
-using websocketpp::lib::placeholders::_1;
-using websocketpp::lib::placeholders::_2;
-using websocketpp::lib::bind;
-
-// type of the ssl context pointer is long so alias it
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
-
-struct connection_data {
-    int sessionid;
-    std::string name;
-};
-
-class print_server {
-public:
-    print_server() : m_next_sessionid(1) {
+WSServer::WSServer() : m_next_sessionid(1) {
         m_server.init_asio(&ios);
                 
-        m_server.set_open_handler(bind(&print_server::on_open,this,::_1));
-        m_server.set_close_handler(bind(&print_server::on_close,this,::_1));
-        m_server.set_message_handler(bind(&print_server::on_message,this,::_1,::_2));
+        m_server.set_open_handler(bind(&WSServer::on_open,this,::_1));
+        m_server.set_close_handler(bind(&WSServer::on_close,this,::_1));
+        m_server.set_message_handler(bind(&WSServer::on_message,this,::_1,::_2));
 
         tls.init_asio(&ios);
-        tls.set_message_handler(bind(&print_server::on_message,this,::_1,::_2));
+        tls.set_message_handler(bind(&WSServer::on_message,this,::_1,::_2));
         
         // TLS endpoint has an extra handler for the tls init
-        tls.set_tls_init_handler(bind(&print_server::on_tls_init,this, ::_1));
+        tls.set_tls_init_handler(bind(&WSServer::on_tls_init,this, ::_1));
     }
     
-    void on_open(connection_hdl hdl) {
+    void WSServer::on_open(connection_hdl hdl) {
         connection_data data;
         
         data.sessionid = m_next_sessionid++;
@@ -52,7 +34,7 @@ public:
         m_connections[hdl] = data;
     }
     
-    void on_close(connection_hdl hdl) {
+    void WSServer::on_close(connection_hdl hdl) {
         connection_data& data = get_data_from_hdl(hdl);
         
         std::cout << "Closing connection " << data.name 
@@ -61,7 +43,7 @@ public:
         m_connections.erase(hdl);
     }
     
-    void on_message(connection_hdl hdl, server::message_ptr msg) {
+    void WSServer::on_message(connection_hdl hdl, server::message_ptr msg) {
         connection_data& data = get_data_from_hdl(hdl);
         
         if (data.name == "") {
@@ -105,11 +87,11 @@ public:
     }
 
     // No change to TLS init methods from echo_server_tls
-    std::string get_password() {
+    std::string WSServer::get_password() {
         return "testtest";
     }
 
-    context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
+    context_ptr WSServer::on_tls_init(websocketpp::connection_hdl hdl) {
     
         std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
         context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
@@ -119,7 +101,7 @@ public:
                              boost::asio::ssl::context::no_sslv2 |
                              boost::asio::ssl::context::no_sslv3 |
                              boost::asio::ssl::context::single_dh_use);
-            ctx->set_password_callback(bind(&print_server::get_password, this));
+            ctx->set_password_callback(bind(&WSServer::get_password, this));
             ctx->use_certificate_chain_file("server.pem");
             ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
         } catch (std::exception& e) {
@@ -128,7 +110,7 @@ public:
         return ctx;
 }
     
-    connection_data& get_data_from_hdl(connection_hdl hdl) {
+    connection_data& WSServer::get_data_from_hdl(connection_hdl hdl) {
         auto it = m_connections.find(hdl);
         
         if (it == m_connections.end()) {
@@ -140,7 +122,7 @@ public:
         return it->second;
     }
     
-    void run(uint16_t port_plain, uint16_t port_tls) {
+    void WSServer::run(uint16_t port_plain, uint16_t port_tls) {
         m_server.listen(port_plain);
         m_server.start_accept();
 
@@ -149,19 +131,3 @@ public:
 
         ios.run();
     }
-private:
-    typedef std::map<connection_hdl,connection_data,std::owner_less<connection_hdl>> con_list;
-
-    int m_next_sessionid;
-    server m_server;
-    server_tls tls;
-    con_list m_connections;
-    boost::asio::io_service ios;
-};
-
-int main() {
-    print_server server;
-    server.run(1919, 1920);
-}
-
-
