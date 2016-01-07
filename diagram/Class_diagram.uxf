@@ -70,18 +70,23 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>230</x>
+      <x>0</x>
       <y>380</y>
-      <w>120</w>
-      <h>140</h>
+      <w>350</w>
+      <h>220</h>
     </coordinates>
-    <panel_attributes>Server
+    <panel_attributes>WSServer
 --
 --
-+run()
+-websocketpp::config::asio_tls server_tls
+-boost::asio::io_service ios
+--
++run(tls_port)
 +on_message()
 +on_open()
-+on_clode()</panel_attributes>
++on_close()
++on_tls_init(connection_hdl) -&gt; context_ptr
+</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
