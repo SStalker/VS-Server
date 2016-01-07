@@ -5,8 +5,8 @@
     <id>UMLClass</id>
     <coordinates>
       <x>650</x>
-      <y>70</y>
-      <w>210</w>
+      <y>60</y>
+      <w>290</w>
       <h>260</h>
     </coordinates>
     <panel_attributes>Client
@@ -18,14 +18,14 @@
 -Friendlist:Collection&lt;Client&gt;
 -Blocklist:Collection&lt;Client&gt;
 --
--login(string, hash)
--logout()
--sendmessage(int, int, string)
--addFriend(int)
--removeFriend(int)
--blockClient(int)
--changeStatus(string)
--decodeBase64(string)???????
++login(string, hash)
++logout()
++sendmessage(int, int, string)
++addNewFriend(int)
++removeFriend(int)
++blockClient(int)
++changeStatus(string)
++decodeBase64(string)???????
 </panel_attributes>
     <additional_attributes/>
   </element>
@@ -33,7 +33,7 @@
     <id>UMLClass</id>
     <coordinates>
       <x>650</x>
-      <y>480</y>
+      <y>470</y>
       <w>210</w>
       <h>60</h>
     </coordinates>
@@ -46,11 +46,11 @@
     <id>UMLClass</id>
     <coordinates>
       <x>650</x>
-      <y>560</y>
+      <y>550</y>
       <w>210</w>
       <h>270</h>
     </coordinates>
-    <panel_attributes>Datenbank
+    <panel_attributes>Database
 --
 -connection:Connection
 --
@@ -71,7 +71,7 @@
     <id>UMLClass</id>
     <coordinates>
       <x>0</x>
-      <y>380</y>
+      <y>370</y>
       <w>350</w>
       <h>220</h>
     </coordinates>
@@ -93,7 +93,7 @@
     <id>Relation</id>
     <coordinates>
       <x>340</x>
-      <y>140</y>
+      <y>130</y>
       <w>330</w>
       <h>270</h>
     </coordinates>
@@ -107,7 +107,7 @@ r2=0..*
     <id>Relation</id>
     <coordinates>
       <x>340</x>
-      <y>430</y>
+      <y>420</y>
       <w>330</w>
       <h>100</h>
     </coordinates>
@@ -120,14 +120,14 @@ r1=1</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>340</x>
-      <y>500</y>
+      <y>490</y>
       <w>330</w>
       <h>120</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;&lt;-
 
 
-Datenbank:DBO
+Database:DBO
 r1=1</panel_attributes>
     <additional_attributes>310.0;100.0;10.0;10.0</additional_attributes>
   </element>
@@ -135,7 +135,7 @@ r1=1</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>650</x>
-      <y>350</y>
+      <y>340</y>
       <w>210</w>
       <h>110</h>
     </coordinates>
@@ -152,7 +152,7 @@ r1=1</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>340</x>
-      <y>390</y>
+      <y>380</y>
       <w>330</w>
       <h>50</h>
     </coordinates>
