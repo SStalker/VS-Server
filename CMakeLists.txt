@@ -14,8 +14,12 @@ if(COMPILER_SUPPORTS_CXX11)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
-		message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+elseif(CMAKE_VERSION VERSION_GREATER "3.1")
+	# Cause of my arch linux could not detect one of the c++11 variants so i added another set
+	# Only available in cmake 3.1 or greater
+	set (CMAKE_CXX_STANDARD 11)	
+else ()
+	message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 
