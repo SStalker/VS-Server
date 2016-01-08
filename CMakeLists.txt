@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 cmake_policy(SET CMP0015 NEW)
 aux_source_directory(src SRC_LIST)
 file(GLOB SRC . *.cpp)
+file(GLOB HEADERS "include/*.h")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_WEBSOCKETPP_CPP11_STL_")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpqxx -lpq") 
@@ -42,6 +43,6 @@ INCLUDE_DIRECTORIES(include/)
 INCLUDE_DIRECTORIES(lib/websocketpp/)
 INCLUDE_DIRECTORIES(lib/rapidjson/include/)
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} main.cpp)
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${HEADERS} main.cpp)
 
 target_link_libraries( ${PROJECT_NAME} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
