@@ -27,7 +27,7 @@ public:
 #include <rapidjson/document.h>
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-
+#include "Database.h"
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 typedef websocketpp::server<websocketpp::config::asio_tls> server_tls;
