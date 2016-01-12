@@ -64,4 +64,5 @@ private:
     server_tls tls;
     con_list m_connections;
     boost::asio::io_service ios;
+    Database db;
 };

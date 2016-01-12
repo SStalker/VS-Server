@@ -12,8 +12,12 @@
 	*/
 
 WSServer::WSServer() : m_next_sessionid(1) {
+
+        // Check the db connection
+        if(!db.connect())
+            return;
+
         m_server.init_asio(&ios);
-                
         m_server.set_open_handler(bind(&WSServer::on_open,this,::_1));
         m_server.set_close_handler(bind(&WSServer::on_close,this,::_1));
         m_server.set_message_handler(bind(&WSServer::on_message,this,::_1,::_2));
@@ -123,6 +127,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
     }
     
     void WSServer::run(uint16_t port_plain, uint16_t port_tls) {
+
         m_server.listen(port_plain);
         m_server.start_accept();
 

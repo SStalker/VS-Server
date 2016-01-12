@@ -8,6 +8,7 @@ class Database{
 
 public:
 	Database();
+    ~Database();
 	bool connect();
 	void registerClient();
 	void addFriend();
@@ -23,4 +24,5 @@ public:
 
 private:
 	connection *conn;
+    work *w;
 };
