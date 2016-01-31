@@ -2,12 +2,24 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title>Bluepanel-Chat</title>
+		<title>Blackhack-Chat</title>
 		<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script type="text/javascript" src="javascript/websocket.js" ></script>
 	</head>
 	<body>
-		<section id="content"></section>
-		<input id="message" type="text"/>
+		<div class="wrapper">
+			<h1>Login</h1>
+		  	<div id="site-status" >
+		  		Status: <span id="insert-status"></span>
+		  	</div>
+		  	<form id="login">
+			  	<label for="mail">E-Mail Adresse:</label>
+				<input id="mail" type="text" name="user" placeholder="user@mail.com" required></input>
+		  		<label for="pass">Passwort:</label>
+		  		<input id="pass"type="password" name="pass" placeholder="********" required></input>
+		  	  	<input type="submit"></input>
+			</form>
+		</div>
 	</body>
 </html>
+  
