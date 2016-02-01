@@ -9,7 +9,7 @@
 	void WSServer::on_open(connection_hdl hdl){}
 	void WSServer::on_close(connection_hdl hdl){}
 	void WSServer::on_message(connection_hdl hdl, server::message_ptr msg){}
-	*/
+*/
 
 WSServer::WSServer() : m_next_sessionid(1) {
 
@@ -71,7 +71,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
             rapidjson::Value::ConstMemberIterator itr = document.FindMember("message");
             
             std::stringstream ss;
-            ss << "Nachricht lautete: " << document["data"].GetString();
+            ss << "Der Nachrichten Typ ist: " << document["type"].GetString();
             std::string val = ss.str();
             document["data"].SetString(val.c_str(), val.length());
 
