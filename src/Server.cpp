@@ -71,9 +71,9 @@ WSServer::WSServer() : m_next_sessionid(1) {
             rapidjson::Value::ConstMemberIterator itr = document.FindMember("message");
             
             std::stringstream ss;
-            ss << "Der Nachrichten Typ ist: " << document["type"].GetString();
+            ss << "Der Nachrichten Typ ist: " << document["request"].GetString();
             std::string val = ss.str();
-            document["data"].SetString(val.c_str(), val.length());
+            document["request"].SetString(val.c_str(), val.length());
 
 
             rapidjson::StringBuffer buffer;
