@@ -37,7 +37,7 @@ bool Database::connect(){
            std::cout << i["id"] << std::endl;
          }
 
-        delete w;
+        //delete w;
         //conn->disconnect ();
 
         return true;
@@ -71,6 +71,7 @@ void Database::loginClient(rapidjson::Document &doc){
     pqxx::result r = w->exec(
                "UPDATE users set online=1 WHERE email=" + w->quote(doc["email"].GetString())
     );
+
     w->commit();
 }
 
@@ -79,6 +80,7 @@ void Database::logoutClient(rapidjson::Document &doc){
     pqxx::result r = w->exec(
                "UPDATE users set online=0 WHERE email=" + w->quote(doc["email"].GetString())
     );
+
     w->commit();
 }
 
