@@ -25,6 +25,8 @@ bool Database::connect(){
 
         w = new work(*conn);
 
+
+
         pqxx::result r = w->exec("SELECT * FROM users");
         w->commit();
 
@@ -35,7 +37,8 @@ bool Database::connect(){
            std::cout << i["id"] << std::endl;
          }
 
-		conn->disconnect ();
+        delete w;
+        //conn->disconnect ();
 
         return true;
 
@@ -45,17 +48,102 @@ bool Database::connect(){
 	}
 }
 
-void Database::registerClient(){
+void Database::registerClient(rapidjson::Document &doc){
+
+    pqxx::result r = w->exec(
+                "INSERT INTO users(email,password,firstname,lastname,birthday,operator) "
+                    "VALUES (" +
+                    w->quote(doc["email"].GetString()) + ", " +
+                    w->quote(doc["password"].GetString()) + ", " +
+                    w->quote(doc["firstname"].GetString()) + ", " +
+                    w->quote(doc["lastname"].GetString()) + ", " +
+                    w->quote(doc["birthday"].GetString()) + ", " +
+                    w->quote(doc["op"].GetString()) +
+                    ")\
+    ");
+
+    w->commit();
 
 }
 
-void Database::addFriend(){}
-void Database::removeFriend(){}
-void Database::createChatroom(){}
-void Database::removeChatroom(){}
-void Database::chatroomRemoveClient(){}
-void Database::chatroomAddClient(){}
-void Database::chatroomNewMessage(){}
-void Database::newMessage(){}
-void Database::setStatus(){}
-void Database::setOperator(){}
+void Database::loginClient(rapidjson::Document &doc){
+
+    pqxx::result r = w->exec(
+               "UPDATE users set online=1 WHERE email=" + w->quote(doc["email"].GetString())
+    );
+    w->commit();
+}
+
+void Database::logoutClient(rapidjson::Document &doc){
+
+    pqxx::result r = w->exec(
+               "UPDATE users set online=0 WHERE email=" + w->quote(doc["email"].GetString())
+    );
+    w->commit();
+}
+
+void Database::addFriend(rapidjson::Document &doc){
+
+    pqxx::result r = w->exec(
+                "INSERT INTO invites(from, to) "
+                    "VALUES (" +
+                    w->quote(doc["uid"].GetString()) + ", " +
+                    w->quote(doc["cid"].GetString()) +
+                    ")\
+    ");
+
+    w->commit();
+}
+
+void Database::removeFriend(rapidjson::Document &doc){
+
+    pqxx::result r = w->exec(
+                "DELETE from COMPANY where ID = " + w->quote(doc["cid"].GetString())
+    );
+
+    w->commit();
+}
+
+void Database::createChatroom(rapidjson::Document &doc){
+
+}
+
+void Database::removeChatroom(rapidjson::Document &doc){
+
+}
+
+void Database::chatroomRemoveClient(rapidjson::Document &doc){
+
+}
+
+void Database::chatroomAddClient(rapidjson::Document &doc){
+
+}
+
+void Database::chatroomNewMessage(rapidjson::Document &doc){
+
+}
+
+void Database::newMessage(rapidjson::Document &doc){
+
+}
+
+void Database::setStatus(rapidjson::Document &doc){
+
+}
+
+void Database::setOperator(rapidjson::Document &doc){
+
+}
+
+std::list<std::string> Database::getNewFriendshipRequests(){
+
+    std::list<std::string> list;
+    return list;
+}
+
+std::list<std::string> Database::getNewOfflineMessages(){
+
+    std::list<std::string> list;
+    return list;
+}
