@@ -10,7 +10,7 @@
 	void WSServer::on_message(connection_hdl hdl, server::message_ptr msg){}
 */
 
-const char* createError(const std::exception& e);
+std::string createError(const std::exception& e);
 
 WSServer::WSServer() : m_next_sessionid(1) {
 
@@ -81,7 +81,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             db.registerClient(document);
                         }catch(const pqxx::pqxx_exception& e){
                             //do something in case of failure
-                            const char* err_out = createError(e.base());
+                            const std::string err_out = createError(e.base());
                             m_server.send(hdl, err_out, msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"login") == 0){
@@ -89,7 +89,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         try{
                             db.loginClient(document);
                         }catch( const pqxx::pqxx_exception& e){
-                            const char* err_out = createError(e.base());
+                            const std::string err_out = createError(e.base());
                             m_server.send(hdl, err_out, msg->get_opcode());
                         }
                     }
@@ -163,7 +163,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
         ios.run();
     }
 
-    const char* createError(const std::exception& e){
+    std::string createError(const std::exception& e){
         rapidjson::Document error_doc;
         error_doc.SetObject();
 
