@@ -1,6 +1,5 @@
 #include "Server.h"
 
-	
 /*	WSServer::WSServer(){
 
 	}
@@ -10,6 +9,8 @@
 	void WSServer::on_close(connection_hdl hdl){}
 	void WSServer::on_message(connection_hdl hdl, server::message_ptr msg){}
 */
+
+const char* createError(const std::exception& e);
 
 WSServer::WSServer() : m_next_sessionid(1) {
 
@@ -68,13 +69,38 @@ WSServer::WSServer() : m_next_sessionid(1) {
             rapidjson::Document document;
             document.Parse(msg->get_payload().c_str());
 
-            rapidjson::Value::ConstMemberIterator itr = document.FindMember("message");
-            
+            /* ToDo:-create validator
+             *      -create multiple missings otpions
+             */
+
+            if(document.HasMember("request")){
+                if(document["request"].IsString()){
+                    if(strcmp(document["request"].GetString(),"registration") == 0){
+                        //register new client in database
+                        try{
+                            db.registerClient(document);
+                        }catch(const pqxx::pqxx_exception& e){
+                            //do something in case of failure
+                            const char* err_out = createError(e.base());
+                            m_server.send(hdl, err_out, msg->get_opcode());
+                        }
+                    }else if(strcmp(document["request"].GetString(),"login") == 0){
+                        //login client
+                        try{
+                            db.loginClient(document);
+                        }catch( const pqxx::pqxx_exception& e){
+                            const char* err_out = createError(e.base());
+                            m_server.send(hdl, err_out, msg->get_opcode());
+                        }
+                    }
+                }
+            }
+
+            //Echo
             std::stringstream ss;
             ss << "Der Nachrichten Typ ist: " << document["request"].GetString();
             std::string val = ss.str();
             document["request"].SetString(val.c_str(), val.length());
-
 
             rapidjson::StringBuffer buffer;
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -135,4 +161,26 @@ WSServer::WSServer() : m_next_sessionid(1) {
         tls.start_accept();
 
         ios.run();
+    }
+
+    const char* createError(const std::exception& e){
+        rapidjson::Document error_doc;
+        error_doc.SetObject();
+
+        rapidjson::Value response;
+        rapidjson::Value message;
+
+        std::stringstream ss;
+        ss << "error";
+        response.SetString(ss.str().c_str() ,error_doc.GetAllocator());
+
+        ss << e.what();
+        message.SetString(ss.str().c_str(),error_doc.GetAllocator());
+
+        rapidjson::StringBuffer error_buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> error_writer(error_buffer);
+
+        error_doc.Accept(error_writer);
+
+        return error_buffer.GetString();
     }
