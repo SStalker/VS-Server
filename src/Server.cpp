@@ -79,7 +79,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                     if(strcmp(document["request"].GetString(),"registersite") == 0){
                         //deploy new template for webclient
                         try{
-                            buildTemplateJson( "webclient-template/register.html", "registersite",hdl, msg);
+                            buildTemplateJson( "../webclient-templates/register.html", "registersite",hdl, msg);
                         }catch(const std::exception& e){
                             //do something in case of failure
                             createError(e, hdl, msg);
@@ -202,23 +202,26 @@ WSServer::WSServer() : m_next_sessionid(1) {
     void WSServer::buildTemplateJson(std::string filename, std::string responsetype, connection_hdl hdl, server::message_ptr msg){
         std::cout << "filename: " << filename << std::endl;
         try{
+            std::string content;
             std::ifstream ifs(filename);
-            std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-            std::ifstream ifs1("webclient-templates/register.html");
-            std::string str((std::istreambuf_iterator<char>(ifs1)), std::istreambuf_iterator<char>());
+            if(ifs.is_open()){
+                std::string content1((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+                content=content1;
+            }else{
+                std::cout << "Could not open ifs" << std::endl;
+            }
 
-            // Read from file
-
-            //DEBUG
+            //Debug
             std::cout << "Debug: " << content << std::endl;
-            std::cout << "Debug1: " << str << std::endl;
+
+            ifs.close();
 
             rapidjson::StringBuffer buffer;
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
 
             writer.StartObject();
-            writer.String("reponse");
+            writer.String("response");
             writer.String(responsetype.c_str());
 
             writer.String("message");

@@ -47,7 +47,7 @@ processMessage = function(data){
 		console.log(dataArray);
 		if(type === "registersite"){
 			console.log(dataArray.message);
-			//$(".wrapper").html(dataArray.message);
+			$(".wrapper").html(dataArray.message);
 		}
 	}
 };
