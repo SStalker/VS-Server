@@ -30,5 +30,5 @@ public:
 
 private:
 	connection *conn;
-    work *w;
+    nontransaction *w;
 };
