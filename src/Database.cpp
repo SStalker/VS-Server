@@ -69,7 +69,7 @@ void Database::registerClient(rapidjson::Document &doc){
 void Database::loginClient(rapidjson::Document &doc){
 
     pqxx::result r = w->exec(
-               "UPDATE users set online=1 WHERE email=" + w->quote(doc["email"].GetString())
+               "UPDATE users set online=true WHERE email=" + w->quote(doc["email"].GetString())
     );
 
     w->commit();
@@ -78,7 +78,7 @@ void Database::loginClient(rapidjson::Document &doc){
 void Database::logoutClient(rapidjson::Document &doc){
 
     pqxx::result r = w->exec(
-               "UPDATE users set online=0 WHERE email=" + w->quote(doc["email"].GetString())
+               "UPDATE users set online=false WHERE email=" + w->quote(doc["email"].GetString())
     );
 
     w->commit();
