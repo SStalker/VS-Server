@@ -51,14 +51,11 @@ bool Database::connect(){
 void Database::registerClient(rapidjson::Document &doc){
 
     pqxx::result r = w->exec(
-                "INSERT INTO users(email,password,firstname,lastname,birthday,operator) "
+                "INSERT INTO users(email,password,nickname) "
                     "VALUES (" +
                     w->quote(doc["values"]["email"].GetString()) + ", " +
                     w->quote(doc["values"]["password"].GetString()) + ", " +
-                    w->quote(doc["values"]["firstname"].GetString()) + ", " +
-                    w->quote(doc["values"]["lastname"].GetString()) + ", " +
-                    w->quote(doc["values"]["birthday"].GetString()) + ", " +
-                    w->quote(doc["values"]["op"].GetString()) +
+                    w->quote(doc["values"]["nickname"].GetString()) +
                     ")\
     ");
 }
