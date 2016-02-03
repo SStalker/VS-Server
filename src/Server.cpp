@@ -96,7 +96,8 @@ WSServer::WSServer() : m_next_sessionid(1) {
                     }else if(strcmp(document["request"].GetString(),"login") == 0){
                         //login client
                         try{
-                            db.loginClient(document);
+                            //std::cout << document["values"]["email"].GetString() << std::endl;
+                            //db.loginClient(document);
                         }catch( const pqxx::pqxx_exception& e){
                             createError(e.base(), hdl, msg);
                         }
@@ -184,8 +185,17 @@ WSServer::WSServer() : m_next_sessionid(1) {
             rapidjson::Writer<rapidjson::StringBuffer> error_writer(error_buffer);
 
             error_writer.StartObject();
+
+            error_writer.String("response");
             error_writer.String("error");
+
+            error_writer.String("values");
+            error_writer.StartObject();
+
+            error_writer.String("err_msg");
             error_writer.String(e.what());
+
+            error_writer.EndObject();
             error_writer.EndObject();
 
             const std::string err_out = error_buffer.GetString();
@@ -221,11 +231,17 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
 
             writer.StartObject();
+
             writer.String("response");
             writer.String(responsetype.c_str());
 
+            writer.String("Value1");
+            writer.StartObject();
+
             writer.String("message");
             writer.String(content.c_str());
+
+            writer.EndObject();
 
             writer.EndObject();
 
