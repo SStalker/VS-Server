@@ -53,12 +53,12 @@ void Database::registerClient(rapidjson::Document &doc){
     pqxx::result r = w->exec(
                 "INSERT INTO users(email,password,firstname,lastname,birthday,operator) "
                     "VALUES (" +
-                    w->quote(doc["email"].GetString()) + ", " +
-                    w->quote(doc["password"].GetString()) + ", " +
-                    w->quote(doc["firstname"].GetString()) + ", " +
-                    w->quote(doc["lastname"].GetString()) + ", " +
-                    w->quote(doc["birthday"].GetString()) + ", " +
-                    w->quote(doc["op"].GetString()) +
+                    w->quote(doc["values"]["email"].GetString()) + ", " +
+                    w->quote(doc["values"]["password"].GetString()) + ", " +
+                    w->quote(doc["values"]["firstname"].GetString()) + ", " +
+                    w->quote(doc["values"]["lastname"].GetString()) + ", " +
+                    w->quote(doc["values"]["birthday"].GetString()) + ", " +
+                    w->quote(doc["values"]["op"].GetString()) +
                     ")\
     ");
 }
@@ -68,7 +68,7 @@ void Database::loginClient(rapidjson::Document &doc){
     std::cout << "Database::loginClient()" << std::endl;
 
     pqxx::result r = w->exec(
-               "UPDATE users set online=true WHERE email=" + w->quote(doc["email"].GetString())
+               "UPDATE users set online=true WHERE email=" + w->quote(doc["values"]["email"].GetString())
     );
 }
 
@@ -77,7 +77,7 @@ void Database::logoutClient(rapidjson::Document &doc){
     std::cout << "Database::logoutClient()" << std::endl;
 
     pqxx::result r = w->exec(
-               "UPDATE users set online=false WHERE email=" + w->quote(doc["email"].GetString())
+               "UPDATE users set online=false WHERE email=" + w->quote(doc["values"]["email"].GetString())
     );
 }
 
@@ -88,8 +88,8 @@ void Database::addFriend(rapidjson::Document &doc){
     pqxx::result r = w->exec(
                 "INSERT INTO invites(from, to) "
                     "VALUES (" +
-                    w->quote(doc["uid"].GetString()) + ", " +
-                    w->quote(doc["cid"].GetString()) +
+                    w->quote(doc["values"]["uid"].GetString()) + ", " +
+                    w->quote(doc["values"]["cid"].GetString()) +
                     ")\
     ");
 }
@@ -99,7 +99,7 @@ void Database::removeFriend(rapidjson::Document &doc){
     std::cout << "Database::removeFriend()" << std::endl;
 
     pqxx::result r = w->exec(
-                "DELETE from COMPANY where ID = " + w->quote(doc["cid"].GetString())
+                "DELETE from COMPANY where ID = " + w->quote(doc["values"]["cid"].GetString())
     );
 }
 
