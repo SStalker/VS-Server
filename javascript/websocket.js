@@ -66,9 +66,35 @@ processMessage = function(data){
 
 $(document).ready(function(){
 	console.log("doc-ready");
-
+	$(".wrapper").on('blur',"#confirm-password",function(){
+		if($("#password").val() === $("#confirm-password").val() && !$(password).val()){
+			console.log("test");
+		}else{
+			console.log("false");
+		}
+	});
 	//Funktion to seriallize login form data
 	//ToDo: Add encryption to password and define the send message in documentation
+	$(".wrapper").on('submit',"#registration",function(event){
+		var data = {
+			request: "registration",
+			values: {
+			}
+		};
+
+		$(this).serializeArray().map(function(x){
+			if(x.name !== "confirm-password"){
+				data.values[x.name] = x.value;
+			}else{
+				console.log("Ignored: confirm-password");
+			}
+		});
+
+		console.log( JSON.stringify(logindata));
+		sendMessage(logindata);
+		event.preventDefault();
+	});
+
 	$('.wrapper').on('submit',"#login", function(event){
 		var logindata = {
 			request: "login",
