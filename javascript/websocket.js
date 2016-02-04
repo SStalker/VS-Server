@@ -26,8 +26,6 @@ websocket.onerror = function (error) {
 websocket.onmessage = function(event){
 	//process the received server data
 	processMessage(event.data);
-	//DEBUGG
-	console.log(event.data);
 };
 
 //Set Connection Status
@@ -41,7 +39,6 @@ function setStatus(){
 
 function setStatusMsg(status){
 	setStatus();
-	console.log("overload");
 	$("#insert-status").append("<span class=\"alert\">"+ status +"</span> ");
 }
 
@@ -51,7 +48,7 @@ function sendMessage(msg){
 		websocket.send(JSON.stringify(msg));
 	}else{
 		//Error -->  do something
-		console.log("no open websocket connection");
+		alert("Keine Verbindung zum Server");
 	}
 };
 
@@ -62,10 +59,17 @@ function processMessage(data){
 	//get the message type
 	if(dataArray.response !== 'undefined'){
 		var type = dataArray.response;
-		console.log(dataArray);
+		//console.log(dataArray);
 		if(type === "registersite"){
-			console.log(dataArray.Value1.message);
+			//console.log(dataArray.values.message);
 			$(".wrapper").html(dataArray.Value1.message);
+		}else if(type === "registration"){
+			//console.log(dataArray.values.message);
+			if(dataArray.values.message === "success"){
+				//Load Login page and set status
+				loadLogin();
+				setStatusMsg("Erfolgreich Registriert");
+			}
 		}
 	}
 };
@@ -120,14 +124,8 @@ $(document).ready(function(){
 				}
 			});
 
-			console.log( JSON.stringify(data));
+			//console.log( JSON.stringify(data));
 			sendMessage(data);
-
-			//Load Login page... change position to onmessage for response
-			loadLogin();
-
-			setStatusMsg("Erfolgreich Registriert");
-
 		}else{
 			setStatusMsg("Passwort stimmt nicht ueberein");
 		}
@@ -145,7 +143,7 @@ $(document).ready(function(){
 			logindata.values[x.name] = x.value;
 		});
 
-		console.log( JSON.stringify(logindata));
+		//console.log( JSON.stringify(logindata));
 		sendMessage(logindata);
 		event.preventDefault();
 	});
