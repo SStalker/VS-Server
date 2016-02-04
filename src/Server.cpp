@@ -173,7 +173,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
     }
 
     void WSServer::stopServer(int signum){
-        //websocketpp::endpoint::stop_listening();
+        std::cout << "Stop Server ---- Close Connections" << std::endl;
+        //websocketpp::endpoint::stop_listening()
+
+        for(auto hdl: m_connections){
+            m_server.close(hdl.first, websocketpp::close::status::going_away, "");
+        }
+
+
+
         //close every connection here and thats ist
 
     }

@@ -55,7 +55,7 @@ public:
 	context_ptr on_tls_init(websocketpp::connection_hdl hdl);
 	connection_data& get_data_from_hdl(connection_hdl hdl);
 	void run(uint16_t port_plain, uint16_t port_tls);
-    static void stopServer(int signum);
+    //void stopServer(int signum);
 
 private:
     typedef std::map<connection_hdl,connection_data,std::owner_less<connection_hdl>> con_list;
