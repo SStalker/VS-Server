@@ -31,7 +31,7 @@ websocket.onmessage = function(event){
 };
 
 //Set Connection Status
-setStatus = function(){
+function setStatus(){
 	if(websocketOk === true ){
 		$("#insert-status").html("Mit Server Verbunden!");
 	}else{
@@ -39,8 +39,14 @@ setStatus = function(){
 	}
 };
 
+function setStatusMsg(status){
+	setStatus();
+	console.log("overload");
+	$("#insert-status").append("<span class=\"alert\">"+ status +"</span> ");
+}
+
 //Send a message
-sendMessage = function(msg){
+function sendMessage(msg){
 	if(websocketOk){
 		websocket.send(JSON.stringify(msg));
 	}else{
@@ -50,7 +56,7 @@ sendMessage = function(msg){
 };
 
 //function to process received data
-processMessage = function(data){
+function processMessage(data){
 	//do something on the data....
 	var dataArray = JSON.parse(data);
 	//get the message type
@@ -64,34 +70,67 @@ processMessage = function(data){
 	}
 };
 
+function confirmPW(password, confirm){
+	if(password.val() === confirm.val() && password.val()!== "" && password.val().toString().length >= 6){
+		setStatus();
+		return true;
+	}else{
+		setStatusMsg("Passwort zu kurz");
+		return false;
+	}
+};
+
+function loadLogin(){
+	$(".wrapper").load("webclient-templates/login.html", function( response, status, xhr ) {
+		if ( status == "error" ) {
+		    	console.log("Sorry but there was an error: "+ xhr.status + " " + xhr.statusText );
+			$(".wrapper").html("<div class=\"error\">\n" 			+
+						"<h3>Konnte Template nicht laden</h3>\n"+
+						"<a href=\"newIndex.html\">Zurück</a>"	+
+						"</div>");
+		}
+	})
+}
+
 $(document).ready(function(){
 	console.log("doc-ready");
 	$(".wrapper").on('blur',"#confirm-password",function(){
-		if($("#password").val() === $("#confirm-password").val() && !$(password).val()){
-			console.log("test");
+
+		if(confirmPW($("#password"),$("#confirm-password"))){
+			console.log("true");
 		}else{
 			console.log("false");
 		}
 	});
 	//Funktion to seriallize login form data
 	//ToDo: Add encryption to password and define the send message in documentation
-	$(".wrapper").on('submit',"#registration",function(event){
-		var data = {
-			request: "registration",
-			values: {
-			}
-		};
+	$(".wrapper").on('submit',"#registration-form",function(event){
+		if(confirmPW($("#password"),$("#confirm-password"))){
+			var data = {
+				request: "registration",
+				values: {
+				}
+			};
 
-		$(this).serializeArray().map(function(x){
-			if(x.name !== "confirm-password"){
-				data.values[x.name] = x.value;
-			}else{
-				console.log("Ignored: confirm-password");
-			}
-		});
+			$(this).serializeArray().map(function(x){
+				if(x.name !== "confirm-password"){
+					data.values[x.name] = x.value;
+				}else{
+					console.log("Ignored: confirm-password");
+				}
+			});
 
-		console.log( JSON.stringify(logindata));
-		sendMessage(logindata);
+			console.log( JSON.stringify(data));
+			sendMessage(data);
+
+			//Load Login page... change position to onmessage for response
+			loadLogin();
+
+			setStatusMsg("Erfolgreich Registriert");
+
+		}else{
+			setStatusMsg("Passwort stimmt nicht ueberein");
+		}
 		event.preventDefault();
 	});
 
@@ -102,7 +141,9 @@ $(document).ready(function(){
 			}
 		};
 
-		$(this).serializeArray().map(function(x){logindata.values[x.name] = x.value;});
+		$(this).serializeArray().map(function(x){
+			logindata.values[x.name] = x.value;
+		});
 
 		console.log( JSON.stringify(logindata));
 		sendMessage(logindata);
@@ -128,15 +169,7 @@ $(document).ready(function(){
 
 	$('.wrapper').on('click', '#back',function(){
 		console.log("clicked back");
-		$(".wrapper").load("webclient-templates/login.html", function( response, status, xhr ) {
-			if ( status == "error" ) {
-			    	console.log("Sorry but there was an error: "+ xhr.status + " " + xhr.statusText );
-				$(".wrapper").html("<div class=\"error\">\n" 			+
-							"<h3>Konnte Template nicht laden</h3>\n"+
-							"<a href=\"newIndex.html\">Zurück</a>"	+
-							"</div>");
-			}
-		})
+		loadLogin();
 	});
 });
 
