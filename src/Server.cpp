@@ -50,21 +50,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
     }
     
     void WSServer::on_message(connection_hdl hdl, server::message_ptr msg) {
-        connection_data& data = get_data_from_hdl(hdl);
-        
-        if (data.name == "") {
-            data.name = msg->get_payload();
-            std::cout << "Setting name of connection with sessionid " 
-                      << data.sessionid << " to " << data.name << std::endl;
-        } else {
-            std::cout << "Got a message from connection " << data.name 
-                      << " with sessionid " << data.sessionid << std::endl;
-        }
-
-        
-        std::cout << "on_message called with hdl: " << hdl.lock().get()
-              << " and message: " << msg->get_payload()
-              << std::endl;
 
         try {
             rapidjson::Document document;
@@ -76,6 +61,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             if(document.HasMember("request")){
                 if(document["request"].IsString()){
+#if 0
                     if(strcmp(document["request"].GetString(),"registersite") == 0){
                         //deploy new template for webclient
                         try{
@@ -84,11 +70,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             //do something in case of failure
                             createError(e, hdl, msg);
                         }
-                    }else/**/
+                    }else
+#endif
                     if(strcmp(document["request"].GetString(),"registration") == 0){
                         //register new client in database
                         try{
                             db.registerClient(document);
+                            sendResponse(document["request"].GetString(), "success", hdl, msg);
                         }catch(const pqxx::pqxx_exception& e){
                             //do something in case of failure
                             createError(e.base(), hdl, msg);
@@ -107,7 +95,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             //Echo
             std::stringstream ss;
-            ss << "Der Nachrichten Typ ist: " << document["request"].GetString();
+            ss << "Echo: " << document["request"].GetString();
             std::string val = ss.str();
             document["request"].SetString(val.c_str(), val.length());
 
@@ -186,6 +174,35 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
     }
 
+    void WSServer::sendResponse(std::string responsetype, std::string response, connection_hdl hdl, server::message_ptr msg){
+        try{
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+            writer.StartObject();
+
+            writer.String("response");
+            writer.String(responsetype.c_str());
+
+            writer.String("values");
+            writer.StartObject();
+
+            writer.String("message");
+            writer.String(response.c_str());
+
+            writer.EndObject();
+
+            writer.EndObject();
+
+            const std::string json = buffer.GetString();
+            m_server.send(hdl, json, msg->get_opcode());
+        }catch (const websocketpp::lib::error_code& e) {
+            std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
+        }
+
+        return;
+    }
+
     void WSServer::createError(const std::exception& e, connection_hdl& hdl, server::message_ptr msg){
         try{
 
@@ -212,6 +229,8 @@ WSServer::WSServer() : m_next_sessionid(1) {
         }catch(const pqxx::pqxx_exception& e){
             std::cout << "An error occured while sending an error: " << e.base().what() << std::endl;
             throw e.base();
+        }catch (const websocketpp::lib::error_code& e) {
+            std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
         }
         return;
     }
@@ -229,21 +248,17 @@ WSServer::WSServer() : m_next_sessionid(1) {
                 std::cout << "Could not open ifs" << std::endl;
             }
 
-            //Debug
-            std::cout << "Debug: " << content << std::endl;
-
             ifs.close();
 
             rapidjson::StringBuffer buffer;
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-
 
             writer.StartObject();
 
             writer.String("response");
             writer.String(responsetype.c_str());
 
-            writer.String("Value1");
+            writer.String("values");
             writer.StartObject();
 
             writer.String("message");
@@ -253,17 +268,14 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             writer.EndObject();
 
-            std::cout << "Debug 1" << content << std::endl;
-
             const std::string html_content = buffer.GetString();
-
-            //DEBUGG
-            std::cout << "DEBUGG: " << html_content << std::endl;
-
             m_server.send(hdl, html_content, msg->get_opcode());
+
         }catch(const pqxx::pqxx_exception& e){
             std::cout << "An error occured while sending a template: " << e.base().what() << std::endl;
             throw e.base();
+        }catch (const websocketpp::lib::error_code& e) {
+            std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
         }catch(const std::exception& e){
             std::cout << "An error occured while reading a template: " << e.what() << std::endl;
             throw e;

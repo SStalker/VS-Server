@@ -55,7 +55,7 @@ public:
 	context_ptr on_tls_init(websocketpp::connection_hdl hdl);
 	connection_data& get_data_from_hdl(connection_hdl hdl);
 	void run(uint16_t port_plain, uint16_t port_tls);
-    //void stopServer(int signum);
+    void stopServer(int signum);
 
 private:
     typedef std::map<connection_hdl,connection_data,std::owner_less<connection_hdl>> con_list;
@@ -67,7 +67,7 @@ private:
     boost::asio::io_service ios;
     Database db;
 
-
+    void sendResponse(std::string responsetype, std::string response, connection_hdl hdl, server::message_ptr msg);
     void createError(const std::exception& e, connection_hdl& hdl, server::message_ptr msg);
     void buildTemplateJson(std::string filename, std::string responsetype, connection_hdl hdl, server::message_ptr msg);
 };
