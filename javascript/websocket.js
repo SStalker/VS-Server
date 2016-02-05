@@ -19,7 +19,7 @@ websocket.onerror = function (error) {
 	websocketOk = false;
 	setStatus();
 	//DEBUGG
-	console.log('WebSocket Error ' + error);
+	console.log('WebSocket Error');
 };
 
 //receive messages from server
@@ -59,12 +59,12 @@ function processMessage(data){
 	//get the message type
 	if(dataArray.response !== 'undefined'){
 		var type = dataArray.response;
-		//console.log(dataArray);
+		console.log(dataArray);
 		if(type === "registersite"){
 			//console.log(dataArray.values.message);
 			$(".wrapper").html(dataArray.Value1.message);
 		}else if(type === "registration"){
-			//console.log(dataArray.values.message);
+			console.log(dataArray.values.message);
 			if(dataArray.values.message === "success"){
 				//Load Login page and set status
 				loadLogin();
