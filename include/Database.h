@@ -13,7 +13,7 @@ public:
     ~Database();
 	bool connect();
     void registerClient(rapidjson::Document &doc);
-    void loginClient(rapidjson::Document &doc);
+    bool loginClient(rapidjson::Document &doc);
     void logoutClient(rapidjson::Document &doc);
 	void addFriend(rapidjson::Document &doc);
 	void removeFriend(rapidjson::Document &doc);

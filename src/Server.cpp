@@ -91,19 +91,17 @@ WSServer::WSServer() : m_next_sessionid(1) {
                     }else if(strcmp(document["request"].GetString(),"login") == 0){
                         //login client
                         try{
-                            //db.loginClient(document);
-
                             std::vector<std::pair<std::string, std::string> > values;
-
-                            //if(login ok dann)
-                            values.push_back(std::pair<std::string, std::string>("login","success"));
-                            m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
-                            //send chat template
-                            m_server.send(hdl, buildTemplateJson( "../webclient-templates/chat-template.html", document["request"].GetString()), msg->get_opcode());
-                            //sonst
-                            //values.push_back(std::pair<std::string, std::string>("login","failed"));
-                            //m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
-
+                            if(db.loginClient(document)){
+                                //if(login ok dann)
+                                values.push_back(std::pair<std::string, std::string>("login","success"));
+                                m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                //send chat template
+                                m_server.send(hdl, buildTemplateJson( "../webclient-templates/intern.html", document["request"].GetString()), msg->get_opcode());
+                            }else{
+                                values.push_back(std::pair<std::string, std::string>("login","failed"));
+                                m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                            }
 
                         }catch( const pqxx::pqxx_exception& e){
                             m_server.send(hdl, createError(e.base()), msg->get_opcode());
@@ -207,7 +205,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
             writer.StartObject();
 
             for(std::pair<std::string, std::string> values : response){
-                std::cout << values.first << " " << values.second << std::endl;
                 writer.Key(values.first.c_str());
                 writer.String(values.second.c_str());
             }

@@ -60,13 +60,30 @@ void Database::registerClient(rapidjson::Document &doc){
     ");
 }
 
-void Database::loginClient(rapidjson::Document &doc){
+bool Database::loginClient(rapidjson::Document &doc){
 
     std::cout << "Database::loginClient()" << std::endl;
+
+    //ToDo pw validation
 
     pqxx::result r = w->exec(
                "UPDATE users set online=true WHERE email=" + w->quote(doc["values"]["email"].GetString())
     );
+
+    //Check if login was successfully and return bool
+    pqxx::result check = w->exec(
+                "SELECT * FROM users WHERE email=" + w->quote(doc["values"]["email"].GetString())
+            );
+    if(check.affected_rows() == 1){
+        //std::cout << "Affectet rows: " << check.affected_rows() << std::endl;
+        //std::cout << check[0]["online"] << std::endl;
+        return true;
+    }else{
+        pqxx::result r = w->exec(
+                   "UPDATE users set online=false WHERE email=" + w->quote(doc["values"]["email"].GetString())
+        );
+        return false;
+    }
 }
 
 void Database::logoutClient(rapidjson::Document &doc){
@@ -76,6 +93,7 @@ void Database::logoutClient(rapidjson::Document &doc){
     pqxx::result r = w->exec(
                "UPDATE users set online=false WHERE email=" + w->quote(doc["values"]["email"].GetString())
     );
+
 }
 
 void Database::addFriend(rapidjson::Document &doc){
