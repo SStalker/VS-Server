@@ -68,7 +68,7 @@ private:
     boost::asio::io_service ios;
     Database db;
 
-    void sendResponse(std::string responsetype, std::vector<std::pair<std::string, std::string>> response, connection_hdl hdl, server::message_ptr msg);
-    void createError(const std::exception& e, connection_hdl& hdl, server::message_ptr msg);
-    void buildTemplateJson(std::string filename, std::string responsetype, connection_hdl hdl, server::message_ptr msg);
+    const std::string response(std::string responsetype, std::vector<std::pair<std::string, std::string>> response);
+    const std::string createError(const std::exception& e);
+    const std::string buildTemplateJson(std::string filename, std::string responsetype);
 };
