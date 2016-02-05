@@ -54,7 +54,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
         try {
             rapidjson::Document document;
             document.Parse(msg->get_payload().c_str());
-
             /* ToDo:-create validator
              *      -create multiple missings otpions
              */
@@ -72,11 +71,16 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         }
                     }else
 #endif
+
                     if(strcmp(document["request"].GetString(),"registration") == 0){
                         //register new client in database
                         try{
                             db.registerClient(document);
-                            sendResponse(document["request"].GetString(), "success", hdl, msg);
+
+                            std::vector<std::pair<std::string, std::string>> values;
+                            values.push_back(std::pair<std::string, std::string>("message","success"));
+
+                            sendResponse(document["request"].GetString(), values, hdl, msg);
                         }catch(const pqxx::pqxx_exception& e){
                             //do something in case of failure
                             createError(e.base(), hdl, msg);
@@ -174,27 +178,37 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
     }
 
-    void WSServer::sendResponse(std::string responsetype, std::string response, connection_hdl hdl, server::message_ptr msg){
+    void WSServer::sendResponse(std::string responsetype, std::vector<std::pair<std::string, std::string>> response, connection_hdl hdl, server::message_ptr msg){
         try{
             rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);            
 
             writer.StartObject();
 
-            writer.String("response");
+            writer.Key("response");
             writer.String(responsetype.c_str());
 
-            writer.String("values");
+            writer.Key("values");
             writer.StartObject();
-
-            writer.String("message");
-            writer.String(response.c_str());
-
+            for(std::pair<std::string, std::string> values : response){
+                std::cout << values.first << " " << values.second << std::endl;
+                writer.Key(values.first.c_str());
+                writer.String(values.second.c_str());
+            }
             writer.EndObject();
+#if 0
+            //iterator schleife über alle elemente
+            for(rapidjson::Value v : tmp){
+                std::cout << v.GetString() << std::endl;
+            }
+#endif
 
             writer.EndObject();
 
             const std::string json = buffer.GetString();
+
+            std::cout << "Debug sendResponse: " << json << std::endl;
+
             m_server.send(hdl, json, msg->get_opcode());
         }catch (const websocketpp::lib::error_code& e) {
             std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
@@ -211,13 +225,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             error_writer.StartObject();
 
-            error_writer.String("response");
+            error_writer.Key("response");
             error_writer.String("error");
 
-            error_writer.String("values");
+            error_writer.Key("values");
             error_writer.StartObject();
 
-            error_writer.String("err_msg");
+            error_writer.Key("err_msg");
             error_writer.String(e.what());
 
             error_writer.EndObject();
@@ -255,17 +269,16 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             writer.StartObject();
 
-            writer.String("response");
+            writer.Key("response");
             writer.String(responsetype.c_str());
 
-            writer.String("values");
+            writer.Key("values");
             writer.StartObject();
 
-            writer.String("message");
+            writer.Key("message");
             writer.String(content.c_str());
 
             writer.EndObject();
-
             writer.EndObject();
 
             const std::string html_content = buffer.GetString();

@@ -20,6 +20,7 @@ public:
 #include <iostream>
 #include <map>
 #include <exception>
+#include <vector>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
@@ -67,7 +68,7 @@ private:
     boost::asio::io_service ios;
     Database db;
 
-    void sendResponse(std::string responsetype, std::string response, connection_hdl hdl, server::message_ptr msg);
+    void sendResponse(std::string responsetype, std::vector<std::pair<std::string, std::string>> response, connection_hdl hdl, server::message_ptr msg);
     void createError(const std::exception& e, connection_hdl& hdl, server::message_ptr msg);
     void buildTemplateJson(std::string filename, std::string responsetype, connection_hdl hdl, server::message_ptr msg);
 };
