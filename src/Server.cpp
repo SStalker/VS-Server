@@ -13,8 +13,6 @@
 
 WSServer::WSServer() : m_next_sessionid(1) {
 
-        //std::signal(SIGINT, WSServer::stopServer);
-
         // Check the db connection
         if(!db.connect())
             return;
@@ -179,11 +177,34 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
     void WSServer::stopServer(int signum){
         std::cout << "Stop Server ---- Close Connections" << std::endl;
-        //websocketpp::endpoint::stop_listening()
 
-        for(auto hdl: m_connections){
-            m_server.close(hdl.first, websocketpp::close::status::going_away, "");
+        websocketpp::lib::error_code ec;
+        m_server.stop_listening(ec);
+
+        if (ec) {
+            // Failed to stop listening. Log reason using ec.message().
+            return;
         }
+
+        tls.stop_listening(ec);
+
+        if (ec) {
+            // Failed to stop listening. Log reason using ec.message().
+            return;
+        }
+
+
+        // Close all existing websocket connections.
+        std::string data = "Terminating connection...";
+        for(auto hdl: m_connections){
+            m_server.close(hdl.first, websocketpp::close::status::going_away, data, ec);
+        }
+
+        // Stop the endpoint.
+        m_server.stop();
+        tls.stop();
+
+
 
 
 
