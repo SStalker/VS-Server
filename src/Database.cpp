@@ -25,20 +25,7 @@ bool Database::connect(){
 
         w = new nontransaction(*conn);
 
-
-
-        pqxx::result r = w->exec("SELECT * FROM users");
-        //w.commit();
-
-        //const auto ci = result::const_iterator;
-        for (auto i : r)
-         {
-
-           std::cout << i["id"] << std::endl;
-         }
-
-        //delete w;
-        //conn->disconnect ();
+        std::cout << "ID from test@test.de: " << getUserID("test@test.de") << std::endl;
 
         return true;
 
@@ -150,13 +137,43 @@ void Database::setOperator(rapidjson::Document &doc){
 
 }
 
-std::list<std::string> Database::getNewFriendshipRequests(){
+std::list<std::string> Database::getFriendlist(rapidjson::Document &doc){
+
+    std::list<std::string> list;
+    pqxx::result r = w->exec(
+        "SELECT u.email FROM users AS u, user_friend AS uf"
+        "WHERE uf.ukd=" + w->quote( doc["values"]["uid"].GetString() ) +
+        "AND"
+        "uf.fid=u.id"
+    );
+
+    for( auto client : r){
+        std::string mail = client["email"].as<std::string>();
+        std::cout << client["email"] << std::endl;
+        list.push_back( mail );
+    }
+
+    return list;
+}
+
+std::string Database::getUserID(std::string email){
+
+    pqxx::result r = w->exec(
+        "SELECT id FROM users "
+        "WHERE email=" + w->quote( email )
+    );
+
+    std::string id = r[0]["id"].as<std::string>();
+    return id;
+}
+
+std::list<std::string> Database::getNewFriendshipRequests(rapidjson::Document &doc){
 
     std::list<std::string> list;
     return list;
 }
 
-std::list<std::string> Database::getNewOfflineMessages(){
+std::list<std::string> Database::getNewOfflineMessages(rapidjson::Document &doc){
 
     std::list<std::string> list;
     return list;

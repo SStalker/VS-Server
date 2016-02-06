@@ -1,15 +1,8 @@
 #include "Server.h"
 #include <fstream>
 
-/*	WSServer::WSServer(){
+typedef std::pair<std::string, std::string> param;
 
-	}
-
-	void WSServer::run(){}
-	void WSServer::on_open(connection_hdl hdl){}
-	void WSServer::on_close(connection_hdl hdl){}
-	void WSServer::on_message(connection_hdl hdl, server::message_ptr msg){}
-*/
 
 WSServer::WSServer() : m_next_sessionid(1) {
 
@@ -93,6 +86,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             if(db.loginClient(document)){
                                 //if(login ok dann)
                                 values.push_back(std::pair<std::string, std::string>("login","success"));
+                                values.push_back( param("uid", db.getUserID("test@test.de")) );
                                 m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
                                 //send chat template
                                 m_server.send(hdl, buildTemplateJson( "../webclient-templates/intern.html", document["request"].GetString()), msg->get_opcode());
@@ -175,7 +169,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
         ios.run();
     }
 
-    void WSServer::stopServer(int signum){
+    void WSServer::stopServer(){
         std::cout << "Stop Server ---- Close Connections" << std::endl;
 
         websocketpp::lib::error_code ec;
@@ -183,6 +177,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
         if (ec) {
             // Failed to stop listening. Log reason using ec.message().
+            std::cout << "Could not stop listening at m_server: " << ec.message() << std::endl;
             return;
         }
 
@@ -190,6 +185,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
         if (ec) {
             // Failed to stop listening. Log reason using ec.message().
+            std::cout << "Could not stop listening at tls: " << ec.message() << std::endl;
             return;
         }
 
@@ -204,12 +200,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
         m_server.stop();
         tls.stop();
 
-
-
-
-
-        //close every connection here and thats ist
-
+        ios.stop();
     }
 
     const std::string WSServer::response(std::string responsetype, std::vector<std::pair<std::string, std::string>> response){

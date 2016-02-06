@@ -7,7 +7,7 @@ WSServer chatserver;
 void stopServer(int signum){
     std::cout << "Interrupt signal (" << signum << ") received.\n";
 
-    chatserver.stopServer(1);
+    chatserver.stopServer();
 
     exit(signum);
 }

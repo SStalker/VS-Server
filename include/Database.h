@@ -25,8 +25,11 @@ public:
 	void newMessage(rapidjson::Document &doc);
 	void setStatus(rapidjson::Document &doc);
 	void setOperator(rapidjson::Document &doc);
-    std::list<std::string> getNewFriendshipRequests();
-    std::list<std::string> getNewOfflineMessages();
+    std::list<std::string> getNewFriendshipRequests(rapidjson::Document &doc);
+    std::list<std::string> getNewOfflineMessages(rapidjson::Document &doc);
+    std::list<std::string> getFriendlist(rapidjson::Document &doc);
+
+    std::string getUserID(std::string email);
 
 private:
 	connection *conn;
