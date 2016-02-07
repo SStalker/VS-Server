@@ -1,5 +1,4 @@
 #include "Server.h"
-#include <fstream>
 
 typedef std::pair<std::string, std::string> param;
 
@@ -58,7 +57,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             m_server.send(hdl, buildTemplateJson( "../webclient-templates/register.html", "registersite"), msg->get_opcode());
                         }catch(const std::exception& e){
                             //do something in case of failure
-                            m_server.send(hdl, createError(e), msg->get_opcode());
+                            m_server.send(hdl, createError(e, "server"), msg->get_opcode());
                         }
                     }else
 #endif
@@ -72,31 +71,43 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             values.push_back(std::pair<std::string, std::string>("message","success"));
 
                             //Build and Send response
-
                             m_server.send(hdl, response(document["request"].GetString(), values), msg->get_opcode());
 
                         }catch(const pqxx::pqxx_exception& e){
                             //do something in case of failure
-                            m_server.send(hdl, createError(e.base()), msg->get_opcode());
+                            m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"login") == 0){
                         //login client
                         try{
                             std::vector<std::pair<std::string, std::string> > values;
                             if(db.loginClient(document)){
-                                //if(login ok dann)
+                                //if login ok
                                 values.push_back(std::pair<std::string, std::string>("login","success"));
                                 values.push_back( param("uid", db.getUserID("test@test.de")) );
+
+                                //add sessionid to response
+                                std::stringstream sid;
+                                sid << m_connections[hdl].sessionid;
+                                values.push_back( param("sid", sid.str()));
+
+                                //If client is webclient add template to the response
+                                if(document["values"].HasMember("webclient")){
+                                    values.push_back( param("template", readTemplate( "../webclient-templates/intern.html")));
+                                }
+
                                 m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
                                 //send chat template
-                                m_server.send(hdl, buildTemplateJson( "../webclient-templates/intern.html", document["request"].GetString()), msg->get_opcode());
+                                //m_server.send(hdl,buildTemplateJson( "../webclient-templates/intern.html", document["request"].GetString()) , msg->get_opcode());
                             }else{
                                 values.push_back(std::pair<std::string, std::string>("login","failed"));
                                 m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
                             }
 
                         }catch( const pqxx::pqxx_exception& e){
-                            m_server.send(hdl, createError(e.base()), msg->get_opcode());
+                            m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
+                        }catch( const std::exception& e){
+                            m_server.send(hdl, createError(e, "server"), msg->get_opcode());
                         }
                     }
                 }
@@ -104,7 +115,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             //Echo
             std::stringstream ss;
-            ss << "Echo: " << document["request"].GetString();
+            ss << "Echo";
             std::string val = ss.str();
             document["request"].SetString(val.c_str(), val.length());
 
@@ -232,7 +243,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
     }
 
-    const std::string WSServer::createError(const std::exception& e){
+    const std::string WSServer::createError(const std::exception& e, std::string from){
         try{
 
             rapidjson::StringBuffer error_buffer;
@@ -245,6 +256,9 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             error_writer.Key("values");
             error_writer.StartObject();
+
+            error_writer.Key("from");
+            error_writer.String(from.c_str());
 
             error_writer.Key("err_msg");
             error_writer.String(e.what());
@@ -259,40 +273,45 @@ WSServer::WSServer() : m_next_sessionid(1) {
         }
     }
 
+    const std::string WSServer::readTemplate(std::string filename){
+        std::ifstream ifs(filename);
+        if(ifs.is_open()){
+            std::string content1((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+            ifs.close();
+            return content1.c_str();
+        }else{
+            ifs.close();
+            throw std::logic_error("Could not open file");
+        }
+    }
 
     const std::string WSServer::buildTemplateJson(std::string filename, std::string responsetype){
+
+        std::string temp;
+
         try{
-            std::string content;
-            std::ifstream ifs(filename);
-            if(ifs.is_open()){
-                std::string content1((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-                content=content1;
-            }else{
-                std::cout << "Could not open ifs" << std::endl;
-                throw std::logic_error("Could not open file");
-            }
-
-            ifs.close();
-
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-
-            writer.StartObject();
-
-            writer.Key("response");
-            writer.String(responsetype.c_str());
-
-            writer.Key("values");
-            writer.StartObject();
-
-            writer.Key("message");
-            writer.String(content.c_str());
-
-            writer.EndObject();
-            writer.EndObject();
-
-            return buffer.GetString();
-        }catch (const std::exception& e) {
-            std::cout << "Failed to build json: (" << e.what() << ")" << std::endl;
+            temp = readTemplate(filename);
+        }catch(const std::exception& e){
+            std::cout << e.what() << std::endl;
+            throw e;
         }
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+        writer.StartObject();
+
+        writer.Key("response");
+        writer.String(responsetype.c_str());
+
+        writer.Key("values");
+        writer.StartObject();
+
+        writer.Key("template");
+        writer.String(temp.c_str());
+
+        writer.EndObject();
+        writer.EndObject();
+
+        return buffer.GetString();
     }
