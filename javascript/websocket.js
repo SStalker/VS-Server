@@ -1,6 +1,8 @@
 //create a new websocket
 var url = "127.0.0.1";
 var urll = "192.168.2.107";
+var uid;
+var sid;
 
 //var websocket = new WebSocket("ws://iknowit.ddns.net:1919");
 //var websocket = new WebSocket("ws://192.168.178.31:1919");
@@ -60,18 +62,30 @@ function processMessage(data){
 	if(dataArray.response !== 'undefined'){
 		var type = dataArray.response;
 		console.log(dataArray);
-		if(type === "registersite"){
-			//console.log(dataArray.values.message);
-			$(".wrapper").html(dataArray.Value1.message);
-		}else if(type === "registration"){
+		 if(type === "registration"){
 			console.log(dataArray.values.message);
 			if(dataArray.values.message === "success"){
 				//Load Login page and set status
 				loadLogin();
 				setStatusMsg("Erfolgreich Registriert");
 			}
+		}else if(type === "login"){
+			if(dataArray.values.login === "failed"){
+				setStatusMsg("Login fehlgeschlagen, E-Mail Adresse und/oder Passwort überprüfen!");
+			}else if(dataArray.values.login === "success"){
+				uid = parseInt(dataArray.values.uid, 10);
+				sid = parseInt(dataArray.values.sid, 10);
+				//remove comment when template is complete
+				//$(".wrapper").html(dataArray.values.template);
+			}
+		}else if(type === "registersite"){
+			//console.log(dataArray.values.message);
+			$(".wrapper").html(dataArray.values.message);
 		}
+	}else{
+		console.log(dataArray);
 	}
+
 };
 
 function confirmPW(password, confirm){
@@ -113,6 +127,7 @@ $(document).ready(function(){
 			var data = {
 				request: "registration",
 				values: {
+					webclient: true,
 				}
 			};
 
@@ -136,6 +151,7 @@ $(document).ready(function(){
 		var logindata = {
 			request: "login",
 			values: {
+				webclient: true,
 			}
 		};
 
