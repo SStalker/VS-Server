@@ -78,7 +78,7 @@ void Database::logoutClient(rapidjson::Document &doc){
     std::cout << "Database::logoutClient()" << std::endl;
 
     pqxx::result r = w->exec(
-               "UPDATE users set online=false WHERE email=" + w->quote(doc["values"]["email"].GetString())
+               "UPDATE users set online=false WHERE id=" + w->quote(doc["values"]["uid"].GetString())
     );
 
 }
