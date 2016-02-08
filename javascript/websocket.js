@@ -1,8 +1,8 @@
 //create a new websocket
 var url = "127.0.0.1";
 var urll = "192.168.2.107";
-var uid;
-var sid;
+var userid;
+var sessionid;
 
 //var websocket = new WebSocket("ws://iknowit.ddns.net:1919");
 //var websocket = new WebSocket("ws://192.168.178.31:1919");
@@ -73,10 +73,10 @@ function processMessage(data){
 			if(dataArray.values.login === "failed"){
 				setStatusMsg("Login fehlgeschlagen, E-Mail Adresse und/oder Passwort überprüfen!");
 			}else if(dataArray.values.login === "success"){
-				uid = parseInt(dataArray.values.uid, 10);
-				sid = parseInt(dataArray.values.sid, 10);
+				userid = parseInt(dataArray.values.uid, 10);
+				sessionid = parseInt(dataArray.values.sid, 10);
 				//remove comment when template is complete
-				//$(".wrapper").html(dataArray.values.template);
+				$(".wrapper").html(dataArray.values.template);
 			}
 		}else if(type === "registersite"){
 			//console.log(dataArray.values.message);
@@ -184,6 +184,19 @@ $(document).ready(function(){
 	$('.wrapper').on('click', '#back',function(){
 		console.log("clicked back");
 		loadLogin();
+	});
+
+	$('.wrapper').on('click', '#logout', function(){
+		console.log("Logout");
+		var data = {
+			request: "logout",
+			values: {
+				uid: userid,
+				sid: sessionid
+			}
+		};
+		sendMessage(data);
+		//reload page and / or reset ws
 	});
 });
 
