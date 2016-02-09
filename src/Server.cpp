@@ -48,7 +48,8 @@ WSServer::WSServer() : m_next_sessionid(1) {
              *      -create multiple missings otpions
              */
 
-            if(document.HasMember("request")){
+            if(document.HasMember("request")
+                    && document.HasMember("values")){
                 if(document["request"].IsString()){
 #if 0
                     if(strcmp(document["request"].GetString(),"registersite") == 0){
@@ -78,7 +79,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"login") == 0){
-                        //login client
+                        //login client (ToDo: validate if all parameter are ok
                         try{
                             std::vector<std::pair<std::string, std::string> > values;
                             if(db.loginClient(document)){
@@ -97,8 +98,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 }
 
                                 m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
-                                //send chat template
-                                //m_server.send(hdl,buildTemplateJson( "../webclient-templates/intern.html", document["request"].GetString()) , msg->get_opcode());
+
                             }else{
                                 values.push_back(std::pair<std::string, std::string>("login","failed"));
                                 m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
@@ -109,6 +109,26 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         }catch( const std::exception& e){
                             m_server.send(hdl, createError(e, "server"), msg->get_opcode());
                         }
+                    }else if(strcmp(document["request"].GetString(),"logout") == 0 ){
+
+                        std::vector<std::pair<std::string, std::string> > values;
+                        std::stringstream sid;
+                        sid << m_connections[hdl].sessionid;
+
+                        if( document["values"].HasMember("sid")
+                                && document["values"].HasMember("uid")
+                                && strcmp(document["values"]["sid"].GetString(), sid.str()) == 0 ){
+                            try{
+                                db.logoutClient(document);
+
+                                values.push_back(param("logout","success"));
+                                m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                            }catch(const pqxx::pqxx_exception& e){
+                                m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
+                            }
+                        }//send logout response
+                        values.push_back(param("logout","failed"));
+                        m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
                     }
                 }
             }
