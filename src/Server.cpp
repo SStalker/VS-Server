@@ -115,9 +115,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         std::stringstream sid;
                         sid << m_connections[hdl].sessionid;
 
-                        if( document["values"].HasMember("sid")
-                                && document["values"].HasMember("uid")
-                                && strcmp(document["values"]["sid"].GetString(), sid.str()) == 0 ){
+                        if( document["values"].HasMember("sid") && document["values"].HasMember("uid") && strcmp(document["values"]["sid"].GetString(), sid.str().c_str()) == 0 ){
                             try{
                                 db.logoutClient(document);
 
@@ -126,9 +124,11 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             }catch(const pqxx::pqxx_exception& e){
                                 m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                             }
-                        }//send logout response
-                        values.push_back(param("logout","failed"));
-                        m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                        }else{
+                            //send logout response
+                            values.push_back(param("logout","failed"));
+                            m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                        }
                     }
                 }
             }
