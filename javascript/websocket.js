@@ -73,8 +73,8 @@ function processMessage(data){
 			if(dataArray.values.login === "failed"){
 				setStatusMsg("Login fehlgeschlagen, E-Mail Adresse und/oder Passwort überprüfen!");
 			}else if(dataArray.values.login === "success"){
-				userid = parseInt(dataArray.values.uid, 10);
-				sessionid = parseInt(dataArray.values.sid, 10);
+				userid = dataArray.values.uid;
+				sessionid = dataArray.values.sid;
 				//remove comment when template is complete
 				$(".wrapper").html(dataArray.values.template);
 			}
@@ -196,6 +196,7 @@ $(document).ready(function(){
 			}
 		};
 		sendMessage(data);
+		console.log(data);
 		//reload page and / or reset ws
 	});
 });
