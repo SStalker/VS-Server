@@ -65,14 +65,20 @@ WSServer::WSServer() : m_next_sessionid(1) {
                     if(strcmp(document["request"].GetString(),"registration") == 0){
                         //register new client in database
                         try{
-                            //Register new user in database
-                            db.registerClient(document);
-                            //Build response vector if successfully registered
                             std::vector<std::pair<std::string, std::string>> values;
-                            values.push_back(std::pair<std::string, std::string>("message","success"));
+                            //Register new user in database
+                            if(db.registerClient(document)){
+                                //Build response vector if successfully registered
+                                values.push_back(param("message","success"));
 
-                            //Build and Send response
-                            m_server.send(hdl, response(document["request"].GetString(), values), msg->get_opcode());
+                                //Build and Send response
+                                m_server.send(hdl, response(document["request"].GetString(), values), msg->get_opcode());
+                            }else{
+                                values.push_back(param("message","failed"));
+
+                                //Build and Send response
+                                m_server.send(hdl, response(document["request"].GetString(), values), msg->get_opcode());
+                            }
 
                         }catch(const pqxx::pqxx_exception& e){
                             //do something in case of failure
@@ -115,12 +121,17 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         std::stringstream sid;
                         sid << m_connections[hdl].sessionid;
 
-                        if( document["values"].HasMember("sid") && document["values"].HasMember("uid") && strcmp(document["values"]["sid"].GetString(), sid.str().c_str()) == 0 ){
+                        if( document["values"].HasMember("sid") && document["values"].HasMember("uid") && document["values"]["sid"].IsString() && strcmp(document["values"]["sid"].GetString(), sid.str().c_str()) == 0 ){
                             try{
-                                db.logoutClient(document);
+                                if(db.logoutClient(document)){
 
-                                values.push_back(param("logout","success"));
-                                m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                    values.push_back(param("logout","success"));
+                                    m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                    //m_server.close(hdl,websocketpp::close::status::going_away, "Logged out");
+                                }else{
+                                    values.push_back(param("logout","failed"));
+                                    m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                }
                             }catch(const pqxx::pqxx_exception& e){
                                 m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                             }
