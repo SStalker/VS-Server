@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <regex>
 #include <pqxx/pqxx>
 #include <rapidjson/document.h>
 
@@ -12,9 +13,9 @@ public:
 	Database();
     ~Database();
 	bool connect();
-    void registerClient(rapidjson::Document &doc);
+    bool registerClient(rapidjson::Document &doc);
     bool loginClient(rapidjson::Document &doc);
-    void logoutClient(rapidjson::Document &doc);
+    bool logoutClient(rapidjson::Document &doc);
 	void addFriend(rapidjson::Document &doc);
 	void removeFriend(rapidjson::Document &doc);
 	void createChatroom(rapidjson::Document &doc);

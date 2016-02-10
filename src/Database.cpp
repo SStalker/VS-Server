@@ -35,16 +35,23 @@ bool Database::connect(){
 	}
 }
 
-void Database::registerClient(rapidjson::Document &doc){
+bool Database::registerClient(rapidjson::Document &doc){
 
-    pqxx::result r = w->exec(
-                "INSERT INTO users(email,password,nickname) "
+    if( doc["values"].HasMember("email") && doc["values"].HasMember("password") && doc["values"].HasMember("nickname")
+            && doc["values"]["email"].IsString() && doc["values"]["password"].IsString() && doc["values"]["nickname"].IsString()){
+
+        pqxx::result r = w->exec(
+                    "INSERT INTO users(email,password,nickname) "
                     "VALUES (" +
                     w->quote(doc["values"]["email"].GetString()) + ", " +
-                    w->quote(doc["values"]["password"].GetString()) + ", " +
-                    w->quote(doc["values"]["nickname"].GetString()) +
-                    ")\
-    ");
+                w->quote(doc["values"]["password"].GetString()) + ", " +
+                w->quote(doc["values"]["nickname"].GetString()) +
+                ")\
+            ");
+        return true;
+    }else{
+        return false;
+    }
 }
 
 bool Database::loginClient(rapidjson::Document &doc){
@@ -52,34 +59,53 @@ bool Database::loginClient(rapidjson::Document &doc){
     std::cout << "Database::loginClient()" << std::endl;
 
     //ToDo pw validation
-
     pqxx::result r = w->exec(
-               "UPDATE users set online=true WHERE email=" + w->quote(doc["values"]["email"].GetString())
+               "SELECT password From users WHERE email=" + w->quote(doc["values"]["email"].GetString())
     );
 
-    //Check if login was successfully and return bool
-    pqxx::result check = w->exec(
-                "SELECT * FROM users WHERE email=" + w->quote(doc["values"]["email"].GetString())
-            );
-    if(check.affected_rows() == 1){
-        //std::cout << "Affectet rows: " << check.affected_rows() << std::endl;
-        //std::cout << check[0]["online"] << std::endl;
-        return true;
-    }else{
+    std::string pass = r[0]["password"].as<std::string>();
+
+    //remove whitespaces
+    pass = std::regex_replace(pass, std::regex("\\s+"), "");
+
+    std::cout << pass.c_str() << " == " << doc["values"]["password"].GetString() << std::endl;
+    if( r.size() == 1 && doc["values"]["password"].IsString() && strcmp(pass.c_str(),doc["values"]["password"].GetString()) == 0 ){
         pqxx::result r = w->exec(
-                   "UPDATE users set online=false WHERE email=" + w->quote(doc["values"]["email"].GetString())
+                   "UPDATE users set online=true WHERE email=" + w->quote(doc["values"]["email"].GetString())
         );
+
+        //Check if login was successfully and return bool
+        pqxx::result check = w->exec(
+                    "SELECT * FROM users WHERE email=" + w->quote(doc["values"]["email"].GetString())
+                );
+        if(check.affected_rows() == 1){
+            return true;
+        }else{
+            pqxx::result r = w->exec(
+                       "UPDATE users set online=false WHERE email=" + w->quote(doc["values"]["email"].GetString())
+            );
+            return false;
+        }
+
+    }else{
         return false;
     }
+
+
 }
 
-void Database::logoutClient(rapidjson::Document &doc){
+bool Database::logoutClient(rapidjson::Document &doc){
 
-    std::cout << "Database::logoutClient()" << std::endl;
+    if(doc["values"].HasMember("uid") && doc["values"]["uid"].IsString()){
+        std::cout << "Database::logoutClient()" << std::endl;
 
-    pqxx::result r = w->exec(
-               "UPDATE users set online=false WHERE id=" + w->quote(doc["values"]["uid"].GetString())
-    );
+        pqxx::result r = w->exec(
+                    "UPDATE users set online=false WHERE id=" + w->quote(doc["values"]["uid"].GetString())
+                );
+        return true;
+    }else{
+        return false;
+    }
 
 }
 
