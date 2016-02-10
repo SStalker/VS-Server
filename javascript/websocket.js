@@ -81,6 +81,14 @@ function processMessage(data){
 		}else if(type === "registersite"){
 			//console.log(dataArray.values.message);
 			$(".wrapper").html(dataArray.values.message);
+		}else if(type === "logout"){
+			if(dataArray.values.logout === "success"){
+				alert("Erfolgeich ausgeloggt");
+				websocket.close();
+				window.location.reload(true);
+			}else if(dataArray.values.logout === "failed"){
+				alert("Fehler beim Ausloggen, bitte versuche es nochmal.");
+			}
 		}
 	}else{
 		console.log(dataArray);
