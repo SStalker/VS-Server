@@ -163,6 +163,26 @@ void Database::setOperator(rapidjson::Document &doc){
 
 }
 
+std::list< foundUsers > Database::getSearchedUsers(rapidjson::Document &doc){
+
+    std::stringstream search;
+    search << "%" << doc["values"]["searchUser"].GetString() << "%";
+    std::list<foundUsers> found;
+    pqxx::result r = w->exec(
+                "SELECT email, nickname FROM users WHERE email LIKE " +  w->quote( search.str() ) + " OR nickname LIKE " + w->quote( search.str() )
+            );
+    for(auto user : r){
+        foundUsers row;
+
+        row.email = user["email"].as<std::string>();
+        row.nickname = user["nickname"].as<std::string>();
+
+        found.push_back(row);
+    }
+
+    return found;
+}
+
 std::list<std::string> Database::getFriendlist(rapidjson::Document &doc){
 
     std::list<std::string> list;

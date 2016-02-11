@@ -50,7 +50,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
             if(document.HasMember("request")
                     && document.HasMember("values")){
-                if(document["request"].IsString()){
+                if(document["request"].IsString() && document["values"].IsObject()){
 #if 0
                     if(strcmp(document["request"].GetString(),"registersite") == 0){
                         //deploy new template for webclient
@@ -140,6 +140,20 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             values.push_back(param("logout","failed"));
                             m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
                         }
+                    }else if(strcmp(document["request"].GetString(),"searchUser") == 0 ){
+
+                        std::vector<std::pair<std::string, std::string> > values;
+
+                        if(document["values"].HasMember("searchUser") && document["values"]["searchUser"].IsString()){
+                            std::list<foundUsers> found = db.getSearchedUsers(document);
+                            m_server.send(hdl, responseSearchedList(document["request"].GetString(), found) ,msg->get_opcode());
+
+                        }else if(document["values"].HasMember("webclient")){
+                            values.push_back( param("template", readTemplate( "../webclient-templates/searchFriends.html")));
+                            m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                        }
+
+
                     }
                 }
             }
@@ -272,6 +286,39 @@ WSServer::WSServer() : m_next_sessionid(1) {
         }
 
 
+    }
+
+    const std::string WSServer::responseSearchedList(std::string responsetype, std::list<foundUsers> responseList){
+        try{
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+            writer.StartObject();
+
+            writer.Key("response");
+            writer.String(responsetype.c_str());
+
+            writer.Key("values");
+            writer.StartArray();
+
+            for(foundUsers row : responseList){
+                writer.StartObject();
+
+                writer.Key("email");
+                writer.String(row.email.c_str());
+
+                writer.Key("nickname");
+                writer.String(row.nickname.c_str());
+
+                writer.EndObject();
+            }
+            writer.EndArray();
+            writer.EndObject();
+
+            return buffer.GetString();
+        }catch (const std::exception& e) {
+            std::cout << "Failed to build json: (" << e.what() << ")" << std::endl;
+        }
     }
 
     const std::string WSServer::createError(const std::exception& e, std::string from){
