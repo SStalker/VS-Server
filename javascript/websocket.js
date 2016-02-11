@@ -1,5 +1,6 @@
-//create a new websocket
 $(document).ready(function(){
+
+	//create a new websocket
 	var url = "127.0.0.1";
 	var urll = "192.168.2.107";
 	var userid;
@@ -21,27 +22,8 @@ $(document).ready(function(){
 				'nickname': result.nickname,
 				'email':  result.email
 			};
-
 			this.users.push(user);
-			console.log(ResultModel.users());
-		}/*,
-
-		submitSearch: function(){
-
-				console.log(meh);
-
-				var data = {
-					request: "searchUser",
-					values: {
-					}
-				};
-
-				$(this).serializeArray().map(function(x){
-					data.values[x.name] = x.value;
-				});
-				console.log(data);
-				sendMessage(data);
-		}*/
+		}
 	}
 
 	websocket.onopen = function(event){
@@ -134,7 +116,16 @@ $(document).ready(function(){
 					$.each(dataArray.values, function(){
 						ResultModel.addUser($(this)[0]);
 					});
+					if(ResultModel.users().length < 1){
+						$("#results").hide();
+						setStatusMsg("Niemanden Gefunden");
+					}else{
+						$("#results").show();
+						setStatus();
+					}
 				}
+			}else if(type === "addFriend"){
+				ResultModel.users.removeAll();
 			}
 		}else{
 			console.log(dataArray);
@@ -283,6 +274,20 @@ $(document).ready(function(){
 		event.preventDefault();
 	});
 
+	$('.wrapper').on('click', '.add', function(event){
+
+		var friendMail = $(this).parent().find(".email").text();
+
+		var data = {
+			request: "addFriend",
+			values: {
+				userMail: friendMail
+			}
+		}
+		sendMessage(data);
+		console.log(data);
+		event.preventDefault();
+	});
 
 
 
