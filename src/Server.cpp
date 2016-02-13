@@ -91,7 +91,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             if(db.loginClient(document)){
                                 //if login ok
                                 values.push_back(std::pair<std::string, std::string>("login","success"));
-                                values.push_back( param("uid", db.getUserID("test@test.de")) );
+                                values.push_back( param("uid", db.getUserID(document["values"]["email"].GetString())) );
 
                                 //add sessionid to response
                                 std::stringstream sid;
