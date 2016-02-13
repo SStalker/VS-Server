@@ -35,6 +35,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
         
         std::cout << "Closing connection " << data.name 
                   << " with sessionid " << data.sessionid << std::endl;
+        db.setSessionID(db.getUserIDFromSession(data.sessionid), -1);
         
         m_connections.erase(hdl);
     }
@@ -72,12 +73,12 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 values.push_back(param("message","success"));
 
                                 //Build and Send response
-                                m_server.send(hdl, response(document["request"].GetString(), values), msg->get_opcode());
+                                m_server.send(hdl, response("response", document["request"].GetString(), values), msg->get_opcode());
                             }else{
                                 values.push_back(param("message","failed"));
 
                                 //Build and Send response
-                                m_server.send(hdl, response(document["request"].GetString(), values), msg->get_opcode());
+                                m_server.send(hdl, response("response", document["request"].GetString(), values), msg->get_opcode());
                             }
 
                         }catch(const pqxx::pqxx_exception& e){
@@ -90,12 +91,18 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             std::vector<std::pair<std::string, std::string> > values;
                             if(db.loginClient(document)){
                                 //if login ok
+
+                                std::string userid = db.getUserID(document["values"]["email"].GetString());
+
                                 values.push_back(std::pair<std::string, std::string>("login","success"));
-                                values.push_back( param("uid", db.getUserID(document["values"]["email"].GetString())) );
+                                values.push_back( param("uid", userid ) );
 
                                 //add sessionid to response
+                                int session = m_connections[hdl].sessionid;
+                                db.setSessionID(atoi(userid.c_str()), session);
+
                                 std::stringstream sid;
-                                sid << m_connections[hdl].sessionid;
+                                sid << session;
                                 values.push_back( param("sid", sid.str()));
 
                                 //If client is webclient add template to the response
@@ -103,11 +110,11 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     values.push_back( param("template", readTemplate( "../webclient-templates/intern.html")));
                                 }
 
-                                m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
 
                             }else{
                                 values.push_back(std::pair<std::string, std::string>("login","failed"));
-                                m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                             }
 
                         }catch( const pqxx::pqxx_exception& e){
@@ -124,13 +131,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         if( document["values"].HasMember("sid") && document["values"].HasMember("uid") && document["values"]["sid"].IsString() && strcmp(document["values"]["sid"].GetString(), sid.str().c_str()) == 0 ){
                             try{
                                 if(db.logoutClient(document)){
-
+                                    db.setSessionID(db.getUserIDFromSession(atoi(document["values"]["sid"].GetString())) ,-1);
                                     values.push_back(param("logout","success"));
-                                    m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                    m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                                     //m_server.close(hdl,websocketpp::close::status::going_away, "Logged out");
                                 }else{
                                     values.push_back(param("logout","failed"));
-                                    m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                                    m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                                 }
                             }catch(const pqxx::pqxx_exception& e){
                                 m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
@@ -138,23 +145,60 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         }else{
                             //send logout response
                             values.push_back(param("logout","failed"));
-                            m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                            m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"searchUser") == 0 ){
 
                         std::vector<std::pair<std::string, std::string> > values;
 
                         if(document["values"].HasMember("searchUser") && document["values"]["searchUser"].IsString()){
-                            std::list<foundUsers> found = db.getSearchedUsers(document);
-                            m_server.send(hdl, responseSearchedList(document["request"].GetString(), found) ,msg->get_opcode());
+                            std::stringstream search;
+                            search << "%" << document["values"]["searchUser"].GetString() << "%";
+                            std::list<foundUsers> found = db.getSearchedUsers(search.str(), db.getUserIDFromSession(m_connections[hdl].sessionid));
+                            m_server.send(hdl, responseSearchedList("response", document["request"].GetString(), found) ,msg->get_opcode());
 
                         }else if(document["values"].HasMember("webclient")){
                             values.push_back( param("template", readTemplate( "../webclient-templates/searchFriends.html")));
-                            m_server.send(hdl, response(document["request"].GetString(), values) ,msg->get_opcode());
+                            m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
+                        }
+                    }else if(strcmp(document["request"].GetString(),"addFriend") == 0 ){
+                        if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
+
+                            //Get Client id's
+                            int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
+
+                            int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
+
+                            std::vector<std::pair<std::string, std::string> > responseValues;
+
+                            if(db.friendRequest(uid, friendID)){
+
+                                //Send notification to Clients
+                                if(db.userOnline(friendID)){
+                                    std::vector<std::pair<std::string, std::string> > values;
+
+                                    foundUsers from = db.getPubClientInformation(uid);
+                                    values.push_back(param("email",from.email));
+                                    values.push_back(param("nickname",from.nickname));
+
+
+                                    for(auto con: m_connections){
+                                        std::cout << "Send Friend request" << std::endl;
+                                        if(db.getSessionIDFromUser(friendID) == con.second.sessionid){
+                                            m_server.send(con.first, response("push", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
+                                        }
+                                    }
+                                    responseValues.push_back(param("friendRequest", "success"));
+                                    m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                                }
+                            }else{
+                                responseValues.push_back(param("friendRequest", "failure"));
+                                m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                            }
                         }
 
-
                     }
+
                 }
             }
 
@@ -259,14 +303,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
         ios.stop();
     }
 
-    const std::string WSServer::response(std::string responsetype, std::vector<std::pair<std::string, std::string>> response){
+
+    const std::string WSServer::response(std::string key, std::string responsetype, std::vector<std::pair<std::string, std::string>> response){
         try{
             rapidjson::StringBuffer buffer;
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);            
 
             writer.StartObject();
 
-            writer.Key("response");
+            writer.Key(key.c_str());
             writer.String(responsetype.c_str());
 
             writer.Key("values");
@@ -288,14 +333,14 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
     }
 
-    const std::string WSServer::responseSearchedList(std::string responsetype, std::list<foundUsers> responseList){
+    const std::string WSServer::responseSearchedList(std::string key, std::string responsetype, std::list<foundUsers> responseList){
         try{
             rapidjson::StringBuffer buffer;
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
             writer.StartObject();
 
-            writer.Key("response");
+            writer.Key(key.c_str());
             writer.String(responsetype.c_str());
 
             writer.Key("values");

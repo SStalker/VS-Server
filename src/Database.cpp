@@ -109,17 +109,44 @@ bool Database::logoutClient(rapidjson::Document &doc){
 
 }
 
-void Database::addFriend(rapidjson::Document &doc){
+void Database::addFriendToChat(std::string cid, std::string uid){
 
     std::cout << "Database::addFriend()" << std::endl;
 
     pqxx::result r = w->exec(
-                "INSERT INTO invites(from, to) "
+                "INSERT INTO invites(uid, cid) "
                     "VALUES (" +
-                    w->quote(doc["values"]["uid"].GetString()) + ", " +
-                    w->quote(doc["values"]["cid"].GetString()) +
+                    w->quote(uid) + ", " +
+                    w->quote(cid) +
                     ")\
     ");
+}
+
+bool Database::friendRequest(int uid, int fid){
+    std::cout << "Database::friendRequest()" << std::endl;
+
+    pqxx::result check = w->exec(
+                    "SELECT uid,fid FROM user_friend "
+                    "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
+                       "OR (uid=" + w->quote(fid) + " AND fid=" + w->quote(uid) + ") "
+                    "UNION ALL "
+                    "SELECT uid,fid FROM friend_invites "
+                    "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
+                       "OR (uid=" + w->quote(fid) + " AND fid=" + w->quote(uid) + ") "
+                );
+
+    if(check.affected_rows() == 0 ){
+        pqxx::result r = w->exec(
+                    "INSERT INTO friend_invites(uid, fid) "
+                    "VALUES (" +
+                    w->quote(uid) + ", " +
+                    w->quote(fid) +
+                    ")\
+                ");
+        return true;
+    }else{
+        return false;
+    }
 }
 
 void Database::removeFriend(rapidjson::Document &doc){
@@ -159,17 +186,23 @@ void Database::setStatus(rapidjson::Document &doc){
 
 }
 
+void Database::setSessionID(int uid, int sessionid){
+
+    pqxx::result r = w->exec(
+               "UPDATE users set sessionid=" + w->quote(sessionid) + " WHERE id=" + w->quote(uid)
+    );
+
+}
+
 void Database::setOperator(rapidjson::Document &doc){
 
 }
 
-std::list< foundUsers > Database::getSearchedUsers(rapidjson::Document &doc){
+std::list< foundUsers > Database::getSearchedUsers(std::string search, int uid){
 
-    std::stringstream search;
-    search << "%" << doc["values"]["searchUser"].GetString() << "%";
     std::list<foundUsers> found;
     pqxx::result r = w->exec(
-                "SELECT email, nickname FROM users WHERE email LIKE " +  w->quote( search.str() ) + " OR nickname LIKE " + w->quote( search.str() )
+                "SELECT email, nickname FROM users WHERE email LIKE " +  w->quote( search ) + " OR nickname LIKE " + w->quote( search ) + " AND NOT id=" + w->quote( uid )
             );
     for(auto user : r){
         foundUsers row;
@@ -201,6 +234,56 @@ std::list<std::string> Database::getFriendlist(rapidjson::Document &doc){
 
     return list;
 }
+
+int Database::getUserIDFromSession(int sessionid){
+    pqxx::result r = w->exec(""
+                             "SELECT id FROM users "
+                             "WHERE sessionid =" + w->quote( sessionid )
+    );
+
+    if(r.affected_rows() == 1){
+        return r[0]["id"].as<int>();
+    }else{
+        return -1;
+    }
+}
+
+int Database::getSessionIDFromUser(int id){
+    pqxx::result r = w->exec(""
+                             "SELECT sessionid FROM users "
+                             "WHERE id =" + w->quote( id )
+    );
+
+    return r[0]["sessionid"].as<int>();
+
+}
+
+bool Database::userOnline(int id){
+    pqxx::result r = w->exec(""
+                             "SELECT online FROM users "
+                             "WHERE id =" + w->quote( id )
+    );
+
+    return r[0]["online"].as<bool>();
+
+}
+
+foundUsers Database::getPubClientInformation(int id){
+    pqxx::result r = w->exec(""
+                             "SELECT email, nickname FROM users "
+                             "WHERE id=" + w->quote( id )
+    );
+    foundUsers user;
+
+    if(r.affected_rows() == 1){
+
+        user.email = r[0]["email"].as<std::string>();
+        user.nickname = r[0]["nickname"].as<std::string>();
+    }
+
+    return user;
+}
+
 
 std::string Database::getUserID(std::string email){
 
