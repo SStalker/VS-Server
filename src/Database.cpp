@@ -219,7 +219,7 @@ std::list<foundUsers> Database::getFriendRequests(int uid){
                         "SELECT u.email, u.nickname FROM friends fi "
                         "JOIN users u "
                             "ON fi.uid=u.id "
-                        "WHERE fi.fid=" + w->quote(uid)
+                        "WHERE fi.fid=" + w->quote(uid) + " AND NOT accepted=true"
                 );
 
     for(auto user : r){

@@ -203,11 +203,12 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
                             db.acceptFriendRequest(uid, friendID);
-
-
+                            responseValues.push_back(param("acceptRequest","success"));
+                            responseValues.push_back(param("friendMail", document["values"]["friendMail"].GetString()));
+                            m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
 
                             }else{
-                                responseValues.push_back(param("friendRequest", "failure"));
+                                responseValues.push_back(param("acceptRequest", "failure"));
                                 m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                             }
                         }
