@@ -181,11 +181,28 @@ void Database::setStatus(rapidjson::Document &doc){
 }
 
 void Database::setSessionID(int uid, int sessionid){
-
     pqxx::result r = w->exec(
                "UPDATE users set sessionid=" + w->quote(sessionid) + " WHERE id=" + w->quote(uid)
     );
+}
 
+
+void Database::setFriendRequestTransmition(int uid, int fid){
+    pqxx::result r = w->exec(
+                "UPDATE friends set transmitted=true WHERE uid=" + w->quote(fid) + " AND fid=" + w->quote(uid)
+                );
+}
+
+void Database::setFriendRequestTransmition(int uid){
+    pqxx::result r = w->exec(
+                "UPDATE friends set transmitted=true WHERE fid=" + w->quote(uid)
+                );
+}
+
+void Database::acceptFriendRequest(int uid, int fid){
+    pqxx::result r = w->exec(
+                "UPDATE friends set accepted=true WHERE uid=" + w->quote(fid) + " AND fid=" + w->quote(uid)
+                );
 }
 
 void Database::setOperator(rapidjson::Document &doc){

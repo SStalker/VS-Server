@@ -41,6 +41,9 @@ public:
     bool userOnline(int id);
     foundUsers getPubClientInformation(int id);
     void setSessionID(int uid, int sessionid);
+    void setFriendRequestTransmition(int uid, int fid);
+    void setFriendRequestTransmition(int uid);
+    void acceptFriendRequest(int uid, int fid);
     std::list<foundUsers> getFriendRequests(int uid);
 
     std::string getUserID(std::string email);

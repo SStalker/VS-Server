@@ -116,7 +116,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
 
                                 requests = db.getFriendRequests(db.getUserIDFromSession(session));
-                                m_server.send(hdl, responseSearchedList("push", "friendRequest", requests), msg->get_opcode());
+                                m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
 
 
                             }else{
@@ -160,6 +160,8 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"addFriend") == 0 ){
+                        std::vector<std::pair<std::string, std::string> > responseValues;
+
                         if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
 
                             //Get Client id's
@@ -167,7 +169,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
-                            std::vector<std::pair<std::string, std::string> > responseValues;
 
                             if(db.friendRequest(uid, friendID)){
 
@@ -180,8 +181,8 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     for(auto con: m_connections){
                                         std::cout << "Send Friend request" << std::endl;
                                         if(db.getSessionIDFromUser(friendID) == con.second.sessionid){
-
-                                            m_server.send(con.first, responseSearchedList("push", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
+                                            m_server.send(con.first, responseSearchedList("pushmsg", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
+                                            db.setFriendRequestTransmition(uid,friendID);
                                         }
                                     }
                                     responseValues.push_back(param("friendRequest", "success"));
@@ -192,8 +193,24 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                             }
                         }
+                    }else if(strcmp(document["request"].GetString(),"acceptFriend") == 0 ){
+                        std::vector<std::pair<std::string, std::string> > responseValues;
 
-                    }
+                        if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
+
+                            //Get Client id's
+                            int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
+                            int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
+
+                            db.acceptFriendRequest(uid, friendID);
+
+
+
+                            }else{
+                                responseValues.push_back(param("friendRequest", "failure"));
+                                m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                            }
+                        }
 
                 }
             }
