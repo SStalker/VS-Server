@@ -112,6 +112,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
 
+                                std::list<foundUsers> requests;
+
+
+                                requests = db.getFriendRequests(db.getUserIDFromSession(session));
+                                m_server.send(hdl, responseSearchedList("push", "friendRequest", requests), msg->get_opcode());
+
+
                             }else{
                                 values.push_back(std::pair<std::string, std::string>("login","failed"));
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
@@ -128,24 +135,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         std::stringstream sid;
                         sid << m_connections[hdl].sessionid;
 
-                        if( document["values"].HasMember("sid") && document["values"].HasMember("uid") && document["values"]["sid"].IsString() && strcmp(document["values"]["sid"].GetString(), sid.str().c_str()) == 0 ){
-                            try{
-                                if(db.logoutClient(document)){
-                                    db.setSessionID(db.getUserIDFromSession(atoi(document["values"]["sid"].GetString())) ,-1);
-                                    values.push_back(param("logout","success"));
-                                    m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
-                                    //m_server.close(hdl,websocketpp::close::status::going_away, "Logged out");
-                                }else{
-                                    values.push_back(param("logout","failed"));
-                                    m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
-                                }
-                            }catch(const pqxx::pqxx_exception& e){
-                                m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
-                            }
-                        }else{
-                            //send logout response
-                            values.push_back(param("logout","failed"));
+                        try{
+                            db.logoutClient(atoi(sid.str().c_str()));
+                            db.setSessionID(db.getUserIDFromSession(atoi(sid.str().c_str())) ,-1);
+                            values.push_back(param("logout","success"));
                             m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
+                            //m_server.close(hdl,websocketpp::close::status::going_away, "Logged out");
+
+                        }catch(const pqxx::pqxx_exception& e){
+                            m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"searchUser") == 0 ){
 
@@ -175,17 +173,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                                 //Send notification to Clients
                                 if(db.userOnline(friendID)){
-                                    std::vector<std::pair<std::string, std::string> > values;
-
+                                    std::list<foundUsers> values;
                                     foundUsers from = db.getPubClientInformation(uid);
-                                    values.push_back(param("email",from.email));
-                                    values.push_back(param("nickname",from.nickname));
-
+                                    values.push_back(from);
 
                                     for(auto con: m_connections){
                                         std::cout << "Send Friend request" << std::endl;
                                         if(db.getSessionIDFromUser(friendID) == con.second.sessionid){
-                                            m_server.send(con.first, response("push", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
+
+                                            m_server.send(con.first, responseSearchedList("push", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
                                         }
                                     }
                                     responseValues.push_back(param("friendRequest", "success"));

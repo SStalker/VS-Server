@@ -20,7 +20,7 @@ public:
 	bool connect();
     bool registerClient(rapidjson::Document &doc);
     bool loginClient(rapidjson::Document &doc);
-    bool logoutClient(rapidjson::Document &doc);
+    void logoutClient(int uid);
     void addFriendToChat(std::string cid, std::string uid);
     bool friendRequest(int uid, int fid);
 	void removeFriend(rapidjson::Document &doc);
@@ -41,6 +41,7 @@ public:
     bool userOnline(int id);
     foundUsers getPubClientInformation(int id);
     void setSessionID(int uid, int sessionid);
+    std::list<foundUsers> getFriendRequests(int uid);
 
     std::string getUserID(std::string email);
 

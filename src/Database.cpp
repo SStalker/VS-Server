@@ -94,19 +94,13 @@ bool Database::loginClient(rapidjson::Document &doc){
 
 }
 
-bool Database::logoutClient(rapidjson::Document &doc){
+void Database::logoutClient(int uid){
 
-    if(doc["values"].HasMember("uid") && doc["values"]["uid"].IsString()){
-        std::cout << "Database::logoutClient()" << std::endl;
+    std::cout << "Database::logoutClient()" << std::endl;
 
-        pqxx::result r = w->exec(
-                    "UPDATE users set online=false WHERE id=" + w->quote(doc["values"]["uid"].GetString())
-                );
-        return true;
-    }else{
-        return false;
-    }
-
+    pqxx::result r = w->exec(
+                "UPDATE users set online=false WHERE id=" + w->quote(uid)
+            );
 }
 
 void Database::addFriendToChat(std::string cid, std::string uid){
@@ -200,6 +194,33 @@ void Database::setSessionID(int uid, int sessionid){
 
 void Database::setOperator(rapidjson::Document &doc){
 
+}
+
+
+std::list<foundUsers> Database::getFriendRequests(int uid){
+    std::list <foundUsers> requests;
+
+    std::cout << "uid for request: " << uid << std::endl;
+
+    pqxx::result r = w->exec(
+                        "SELECT u.email, u.nickname FROM friend_invites fi "
+                        "JOIN users u "
+                            "ON fi.uid=u.id "
+                        "WHERE fi.fid=" + w->quote(uid)
+                );
+
+    for(auto user : r){
+        foundUsers row;
+
+        row.email = user["email"].as<std::string>();
+        row.nickname = user["nickname"].as<std::string>();
+
+        std::cout << row.email << " (" << row.nickname << ")" << std::endl;
+
+        requests.push_back(row);
+    }
+
+    return requests;
 }
 
 std::list< foundUsers > Database::getSearchedUsers(std::string search, int uid){
