@@ -124,18 +124,14 @@ bool Database::friendRequest(int uid, int fid){
     }
 
     pqxx::result check = w->exec(
-                    "SELECT uid,fid FROM user_friend "
-                    "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
-                       "OR (uid=" + w->quote(fid) + " AND fid=" + w->quote(uid) + ") "
-                    "UNION ALL "
-                    "SELECT uid,fid FROM friend_invites "
+                    "SELECT uid,fid FROM friends "
                     "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
                        "OR (uid=" + w->quote(fid) + " AND fid=" + w->quote(uid) + ") "
                 );
 
     if(check.affected_rows() == 0 ){
         pqxx::result r = w->exec(
-                    "INSERT INTO friend_invites(uid, fid) "
+                    "INSERT INTO friends(uid, fid) "
                     "VALUES (" +
                     w->quote(uid) + ", " +
                     w->quote(fid) +
@@ -203,7 +199,7 @@ std::list<foundUsers> Database::getFriendRequests(int uid){
     std::cout << "uid for request: " << uid << std::endl;
 
     pqxx::result r = w->exec(
-                        "SELECT u.email, u.nickname FROM friend_invites fi "
+                        "SELECT u.email, u.nickname FROM friends fi "
                         "JOIN users u "
                             "ON fi.uid=u.id "
                         "WHERE fi.fid=" + w->quote(uid)
@@ -245,7 +241,7 @@ std::list<std::string> Database::getFriendlist(rapidjson::Document &doc){
 
     std::list<std::string> list;
     pqxx::result r = w->exec(
-        "SELECT u.email FROM users AS u, user_friend AS uf"
+        "SELECT u.email FROM users AS u, friends AS uf"
         "WHERE uf.ukd=" + w->quote( doc["values"]["uid"].GetString() ) +
         "AND"
         "uf.fid=u.id"
