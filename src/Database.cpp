@@ -125,6 +125,10 @@ void Database::addFriendToChat(std::string cid, std::string uid){
 bool Database::friendRequest(int uid, int fid){
     std::cout << "Database::friendRequest()" << std::endl;
 
+    if(uid == fid){
+        return false;
+    }
+
     pqxx::result check = w->exec(
                     "SELECT uid,fid FROM user_friend "
                     "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
@@ -202,7 +206,7 @@ std::list< foundUsers > Database::getSearchedUsers(std::string search, int uid){
 
     std::list<foundUsers> found;
     pqxx::result r = w->exec(
-                "SELECT email, nickname FROM users WHERE email LIKE " +  w->quote( search ) + " OR nickname LIKE " + w->quote( search ) + " AND NOT id=" + w->quote( uid )
+                "SELECT email, nickname FROM users WHERE (email LIKE " +  w->quote( search ) + " OR nickname LIKE " + w->quote( search ) + ") AND NOT id=" + w->quote( uid )
             );
     for(auto user : r){
         foundUsers row;
