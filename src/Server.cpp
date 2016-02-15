@@ -219,21 +219,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                 }
             }
-
-            //Echo
-            std::stringstream ss;
-            ss << "Echo";
-            std::string val = ss.str();
-            document["request"].SetString(val.c_str(), val.length());
-
-            rapidjson::StringBuffer buffer;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-
-            document.Accept(writer);
-            const char* output = buffer.GetString();
-
-            m_server.send(hdl, output, msg->get_opcode());
-
         } catch (const websocketpp::lib::error_code& e) {
             std::cout << "Echo failed because: " << e
                       << "(" << e.message() << ")" << std::endl;
