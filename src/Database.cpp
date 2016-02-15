@@ -129,6 +129,10 @@ bool Database::friendRequest(int uid, int fid){
         return false;
     }
 
+    pqxx::result checkmail = w->exec(
+                    "SELECT email FROM users WHERE email"
+                );
+
     pqxx::result check = w->exec(
                     "SELECT uid,fid FROM friends "
                     "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
@@ -344,6 +348,10 @@ std::string Database::getUserID(std::string email){
         "SELECT id FROM users "
         "WHERE email=" + w->quote( email )
     );
+
+    if(r.affected_rows() != 1){
+        return "-1";
+    }
 
     std::string id = r[0]["id"].as<std::string>();
     return id;

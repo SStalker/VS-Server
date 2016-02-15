@@ -174,7 +174,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
 
-                            if(db.friendRequest(uid, friendID)){
+                            if(friendID != -1 && db.friendRequest(uid, friendID)){
 
                                 //Send notification to Clients
                                 if(db.userOnline(friendID)){
