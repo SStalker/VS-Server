@@ -12,6 +12,16 @@ struct foundUsers {
     std::string nickname;
 };
 
+struct friendListUser{
+    std::string nickname;
+    std::string email;
+    bool online;
+    std::string firstname;
+    std::string lastname;
+    std::string birthday;
+    std::string imageb64;
+};
+
 class Database{
 
 public:
@@ -35,7 +45,7 @@ public:
     std::list<foundUsers> getSearchedUsers(std::string search, int uid);
     std::list<std::string> getNewFriendshipRequests(rapidjson::Document &doc);
     std::list<std::string> getNewOfflineMessages(rapidjson::Document &doc);
-    std::list<std::string> getFriendlist(rapidjson::Document &doc);
+    std::list<friendListUser> getFriendlist(int uid);
     int getUserIDFromSession(int sessionid);
     int getSessionIDFromUser(int sessionid);
     bool userOnline(int id);

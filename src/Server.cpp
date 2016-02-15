@@ -112,9 +112,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
 
+                                //Send friendlist
+                                std::list<friendListUser> friendlist;
+                                friendlist = db.getFriendlist(db.getUserIDFromSession(session));
+                                m_server.send(hdl, sendFriendlist("pushmsg","friendlist", friendlist), msg->get_opcode());
+
+                                //Send friend open requests
                                 std::list<foundUsers> requests;
-
-
                                 requests = db.getFriendRequests(db.getUserIDFromSession(session));
                                 m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
 
@@ -368,6 +372,54 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                 writer.Key("nickname");
                 writer.String(row.nickname.c_str());
+
+                writer.EndObject();
+            }
+            writer.EndArray();
+            writer.EndObject();
+
+            return buffer.GetString();
+        }catch (const std::exception& e) {
+            std::cout << "Failed to build json: (" << e.what() << ")" << std::endl;
+        }
+    }
+
+    const std::__cxx11::string WSServer::sendFriendlist(std::__cxx11::string key, std::__cxx11::string responsetype, std::list<friendListUser> responseList){
+        try{
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+            writer.StartObject();
+
+            writer.Key(key.c_str());
+            writer.String(responsetype.c_str());
+
+            writer.Key("values");
+            writer.StartArray();
+
+            for(friendListUser row : responseList){
+                writer.StartObject();
+
+                writer.Key("email");
+                writer.String(row.email.c_str());
+
+                writer.Key("nickname");
+                writer.String(row.nickname.c_str());
+
+                writer.Key("firstname");
+                writer.String(row.firstname.c_str());
+
+                writer.Key("lastname");
+                writer.String(row.lastname.c_str());
+
+                writer.Key("birthday");
+                writer.String(row.birthday.c_str());
+
+                writer.Key("image");
+                writer.String(row.imageb64.c_str());
+
+                writer.Key("online");
+                writer.Bool(row.online);
 
                 writer.EndObject();
             }

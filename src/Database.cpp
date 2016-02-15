@@ -63,7 +63,13 @@ bool Database::loginClient(rapidjson::Document &doc){
                "SELECT password From users WHERE email=" + w->quote(doc["values"]["email"].GetString())
     );
 
-    std::string pass = r[0]["password"].as<std::string>();
+    std::string pass;
+
+    if(r.affected_rows() == 1){
+        pass = r[0]["password"].as<std::string>();
+    }else{
+        return false;
+    }
 
     //remove whitespaces
     pass = std::regex_replace(pass, std::regex("\\s+"), "");
@@ -254,20 +260,29 @@ std::list< foundUsers > Database::getSearchedUsers(std::string search, int uid){
     return found;
 }
 
-std::list<std::string> Database::getFriendlist(rapidjson::Document &doc){
+std::list<friendListUser> Database::getFriendlist(int uid){
 
-    std::list<std::string> list;
+    std::list<friendListUser> list;
     pqxx::result r = w->exec(
-        "SELECT u.email FROM users AS u, friends AS uf"
-        "WHERE uf.ukd=" + w->quote( doc["values"]["uid"].GetString() ) +
-        "AND"
-        "uf.fid=u.id"
+        "SELECT u.email, u.nickname, u.online, u.firstname, u.lastname, u.birthday, u.image "
+            "FROM friends f JOIN users u on f.uid=u.id WHERE f.fid=" + w->quote(uid) +
+        " UNION ALL "
+        "SELECT u.email, u.nickname, u.online, u.firstname, u.lastname, u.birthday, u.image "
+            "FROM friends f JOIN users u on f.fid=u.id WHERE f.uid="+ w->quote(uid)
     );
 
     for( auto client : r){
-        std::string mail = client["email"].as<std::string>();
-        std::cout << client["email"] << std::endl;
-        list.push_back( mail );
+        friendListUser row;
+
+        row.nickname = client["nickname"].as<std::string>();
+        row.email = client["email"].as<std::string>();
+        row.firstname = client["firstname"].as<std::string>();
+        row.lastname = client["lastname"].as<std::string>();
+        row.birthday = client["birthday"].as<std::string>();
+        row.imageb64 = client["image"].as<std::string>();
+        row.online = client["online"].as<bool>();
+
+        list.push_back( row );
     }
 
     return list;

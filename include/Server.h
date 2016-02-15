@@ -72,6 +72,7 @@ private:
 
     const std::string response(std::string key, std::string responsetype, std::vector<std::pair<std::string, std::string>> response);
     const std::string responseSearchedList(std::string key, std::string responsetype, std::list<foundUsers> responseList);
+    const std::string sendFriendlist(std::string key, std::string responsetype, std::list<friendListUser> responseList);
     const std::string createError(const std::exception& e, std::string from );
     const std::string readTemplate(std::string filename);
     const std::string buildTemplateJson(std::string filename, std::string responsetype);
