@@ -13,6 +13,7 @@ struct foundUsers {
 };
 
 struct friendListUser{
+    int id;
     std::string nickname;
     std::string email;
     bool online;

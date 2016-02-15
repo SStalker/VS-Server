@@ -122,7 +122,19 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 requests = db.getFriendRequests(db.getUserIDFromSession(session));
                                 m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
 
-
+                                //notify friends
+                                values.clear();
+                                values.push_back(param("email",document["values"]["email"].GetString()));
+                                values.push_back(param("online","true"));
+                                for(auto con: m_connections){
+                                    int id = db.getUserIDFromSession(con.second.sessionid);
+                                    for(auto user: friendlist){
+                                        if(user.id == id){
+                                            m_server.send(con.first, response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
+                                            continue;
+                                        }
+                                    }
+                                }
                             }else{
                                 values.push_back(std::pair<std::string, std::string>("login","failed"));
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());

@@ -326,12 +326,10 @@ std::list<friendListUser> Database::getFriendlist(int uid){
     for( auto client : r){
         friendListUser row;
 
-        for(auto e: client){
-            std::cout << e << std::endl;
-        }
-
+        row.id = client["id"].as<int>();
         row.nickname = client["nickname"].as<std::string>();
         row.email = client["email"].as<std::string>();
+        row.online = client["online"].as<bool>();
         if(!client["firstname"].is_null ()){
             row.firstname = client["firstname"].as<std::string>();
         }
@@ -344,7 +342,6 @@ std::list<friendListUser> Database::getFriendlist(int uid){
         if(!client["image"].is_null()){
             row.imageb64 = client["image"].as<std::string>();
         }
-        row.online = client["online"].as<bool>();
         if(!client["cid"].is_null()){
             row.cid = client["cid"].as<std::string>();
         }
