@@ -20,6 +20,9 @@ struct friendListUser{
     std::string lastname;
     std::string birthday;
     std::string imageb64;
+    std::string cid;
+    std::string chatname;
+    std::string chatstatusmsg;
 };
 
 class Database{
@@ -55,6 +58,9 @@ public:
     void setFriendRequestTransmition(int uid);
     void acceptFriendRequest(int uid, int fid);
     std::list<foundUsers> getFriendRequests(int uid);
+    void createChat(int uid, int friendID);
+    std::string getNickname(int uid);
+
 
     std::string getUserID(std::string email);
 

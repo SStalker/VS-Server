@@ -246,6 +246,49 @@ std::list<foundUsers> Database::getFriendRequests(int uid){
     return requests;
 }
 
+void Database::createChat(int uid, int friendID){
+    pqxx::result r  = w->exec(
+                "INSERT INTO chats(name) VALUES( " + w->quote(this->getNickname(uid) + " - " + this->getNickname(friendID)) +")"
+                    " RETURNING id"
+            );
+    int cid = r[0]["id"].as<int>();
+
+    std::cout << "New chat ID: " << cid << std::endl;
+
+    w->exec(
+        "INSERT INTO chatlist(uid, cid) VALUES('" + w->quote(uid) +
+        "', '" + w->quote(cid) +
+        "')"
+    );
+
+    w->exec(
+        "INSERT INTO chatlist(uid, cid) VALUES('" + w->quote(friendID) +
+        "', '" + w->quote(cid) +
+        "')"
+    );
+#if 0
+    w->exec(""
+            "UPDATE friends SET chatid=" + w->quote(cid) + ""
+            "WHERE (uid=" + w->quote(uid) + " AND fid=" +w->quote(friendID)+ " ) "
+               "OR (uid=" + w->quote(friendID) + " AND fid=" +w->quote(uid)+ " )"
+    );
+#endif
+
+}
+
+std::__cxx11::string Database::getNickname(int uid){
+
+    pqxx::result r = w->exec(
+                "SELECT email FROM users WHERE id=" + w->quote(uid)
+            );
+
+    if(r.affected_rows() == 1){
+        return r[0]["email"].as<std::string>();
+    }else {
+        return "-1";
+    }
+}
+
 std::list< foundUsers > Database::getSearchedUsers(std::string search, int uid){
 
     std::list<foundUsers> found;
@@ -268,23 +311,49 @@ std::list<friendListUser> Database::getFriendlist(int uid){
 
     std::list<friendListUser> list;
     pqxx::result r = w->exec(
-        "SELECT u.email, u.nickname, u.online, u.firstname, u.lastname, u.birthday, u.image "
-            "FROM friends f JOIN users u on f.uid=u.id WHERE f.fid=" + w->quote(uid) +
-        " UNION ALL "
-        "SELECT u.email, u.nickname, u.online, u.firstname, u.lastname, u.birthday, u.image "
-            "FROM friends f JOIN users u on f.fid=u.id WHERE f.uid="+ w->quote(uid)
+        "SELECT u.id, u.email, u.nickname, u. firstname, u.lastname, u.birthday, u.online, u.image, f.cid, c.name, c.status "
+        "FROM (SELECT * "
+                "FROM chatlist l "
+                "WHERE cid IN (SELECT l1.cid "
+                        "FROM chatlist l1 WHERE uid=" + w->quote(uid) +
+                        " ) AND NOT uid=" + w->quote(uid) +
+                " ) AS f "
+        "JOIN users u ON u.id=f.uid "
+        "JOIN chats c ON c.id=f.cid "
+        "WHERE c.chatroom=false"
     );
 
     for( auto client : r){
         friendListUser row;
 
+        for(auto e: client){
+            std::cout << e << std::endl;
+        }
+
         row.nickname = client["nickname"].as<std::string>();
         row.email = client["email"].as<std::string>();
-        row.firstname = client["firstname"].as<std::string>();
-        row.lastname = client["lastname"].as<std::string>();
-        row.birthday = client["birthday"].as<std::string>();
-        row.imageb64 = client["image"].as<std::string>();
+        if(!client["firstname"].is_null ()){
+            row.firstname = client["firstname"].as<std::string>();
+        }
+        if(!client["lastname"].is_null()){
+            row.lastname = client["lastname"].as<std::string>();
+        }
+        if(!client["birthday"].is_null()){
+            row.birthday = client["birthday"].as<std::string>();
+        }
+        if(!client["image"].is_null()){
+            row.imageb64 = client["image"].as<std::string>();
+        }
         row.online = client["online"].as<bool>();
+        if(!client["cid"].is_null()){
+            row.cid = client["cid"].as<std::string>();
+        }
+        if(!client["name"].is_null()){
+            row.chatname = client["name"].as<std::string>();
+        }
+        if(!client["status"].is_null()){
+            row.chatstatusmsg = client["status"].as<std::string>();
+        }
 
         list.push_back( row );
     }

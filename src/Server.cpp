@@ -200,22 +200,29 @@ WSServer::WSServer() : m_next_sessionid(1) {
                     }else if(strcmp(document["request"].GetString(),"acceptFriend") == 0 ){
                         std::vector<std::pair<std::string, std::string> > responseValues;
 
-                        if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
+                        if(document["values"].HasMember("friendMail") && document["values"].HasMember("answer") && document["values"]["friendMail"].IsString() &&  document["values"]["answer"].IsBool()){
 
-                            //Get Client id's
-                            int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
-                            int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
+                            if(document["values"]["answer"].GetString()){
+                                //Get Client id's
+                                int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
+                                int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
-                            db.acceptFriendRequest(uid, friendID);
-                            responseValues.push_back(param("acceptRequest","success"));
-                            responseValues.push_back(param("friendMail", document["values"]["friendMail"].GetString()));
-                            m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
-
-                            }else{
-                                responseValues.push_back(param("acceptRequest", "failure"));
+                                db.acceptFriendRequest(uid, friendID);
+                                responseValues.push_back(param("acceptRequest","success"));
+                                responseValues.push_back(param("friendMail", document["values"]["friendMail"].GetString()));
                                 m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+
+                                //Create chat for friends
+                                db.createChat(uid, friendID);
+
+                                //Send Friendlist update/new user
                             }
+
+                        }else{
+                            responseValues.push_back(param("acceptRequest", "failure"));
+                            m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                         }
+                    }
 
                 }
             }
@@ -405,6 +412,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                 writer.Key("online");
                 writer.Bool(row.online);
+
+                writer.Key("cid");
+                writer.String(row.cid.c_str());
+
+                writer.Key("chatname");
+                writer.String(row.chatname.c_str());
+
+                writer.Key("chatstatus");
+                writer.String(row.chatstatusmsg.c_str());
 
                 writer.EndObject();
             }
