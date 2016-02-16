@@ -129,10 +129,11 @@ bool Database::friendRequest(int uid, int fid){
         return false;
     }
 
-    pqxx::result checkmail = w->exec(
+    /*
+        pqxx::result checkmail = w->exec(
                     "SELECT email FROM users WHERE email"
                 );
-
+    */
     pqxx::result check = w->exec(
                     "SELECT uid,fid FROM friends "
                     "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
@@ -211,7 +212,8 @@ void Database::setFriendRequestTransmition(int uid){
 
 void Database::acceptFriendRequest(int uid, int fid){
     pqxx::result r = w->exec(
-                "UPDATE friends set accepted=true WHERE uid=" + w->quote(fid) + " AND fid=" + w->quote(uid)
+                "UPDATE friends set accepted=true WHERE uid=" + w->quote(fid) + " AND fid=" + w->quote(uid) +
+                " OR uid=" + w->quote(uid) + " AND fid=" + w->quote(fid)
                 );
 }
 
@@ -225,12 +227,20 @@ std::list<foundUsers> Database::getFriendRequests(int uid){
 
     std::cout << "uid for request: " << uid << std::endl;
 
-    pqxx::result r = w->exec(
+    /*pqxx::result r = w->exec(
                         "SELECT u.email, u.nickname FROM friends fi "
                         "JOIN users u "
                             "ON fi.uid=u.id "
-                        "WHERE fi.fid=" + w->quote(uid) + " AND NOT accepted=true"
-                );
+                        "WHERE fi.fid=" + w->quote(uid) + " AND accepted=false"
+                );*/
+    pqxx::result r = w->exec(
+        "SELECT u.email, u.nickname FROM users AS u WHERE u.id="
+        "("
+            "SELECT f.uid FROM friends AS f WHERE f.fid=" + w->quote(uid) + " AND f.accepted=false "
+            "UNION "
+            "SELECT f.fid FROM friends AS f WHERE f.uid=" + w->quote(uid) + " AND f.accepted=false"
+        ")"
+    );
 
     for(auto user : r){
         foundUsers row;
@@ -256,15 +266,15 @@ void Database::createChat(int uid, int friendID){
     std::cout << "New chat ID: " << cid << std::endl;
 
     w->exec(
-        "INSERT INTO chatlist(uid, cid) VALUES('" + w->quote(uid) +
-        "', '" + w->quote(cid) +
-        "')"
+        "INSERT INTO chatlist(uid, cid) VALUES(" + w->quote(uid) +
+        ", " + w->quote(cid) +
+        ")"
     );
 
     w->exec(
-        "INSERT INTO chatlist(uid, cid) VALUES('" + w->quote(friendID) +
-        "', '" + w->quote(cid) +
-        "')"
+        "INSERT INTO chatlist(uid, cid) VALUES(" + w->quote(friendID) +
+        ", " + w->quote(cid) +
+        ")"
     );
 #if 0
     w->exec(""
@@ -311,7 +321,7 @@ std::list<friendListUser> Database::getFriendlist(int uid){
 
     std::list<friendListUser> list;
     pqxx::result r = w->exec(
-        "SELECT u.id, u.email, u.nickname, u. firstname, u.lastname, u.birthday, u.online, u.image, f.cid, c.name, c.status "
+        "SELECT DISTINCT ON(u.id) u.id, u.email, u.nickname, u. firstname, u.lastname, u.birthday, u.online, u.image, f.cid, c.name, c.status "
         "FROM (SELECT * "
                 "FROM chatlist l "
                 "WHERE cid IN (SELECT l1.cid "
