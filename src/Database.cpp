@@ -471,3 +471,27 @@ std::list<std::string> Database::getNewOfflineMessages(rapidjson::Document &doc)
     std::list<std::string> list;
     return list;
 }
+
+void Database::getUserDataFrom(std::string uid, std::map<std::string, std::string> &map){
+
+    pqxx::result r = w->exec(
+        "SELECT id, email, nickname, firstname, lastname, birthday, online, image, operator, sessionid FROM users "
+        "WHERE id=" + w->quote( uid )
+    );
+
+    if(r.affected_rows() != 1){
+        return;
+    }
+
+    map["id"] = r[0]["id"].as<std::string>();
+    map["email"] = r[0]["email"].as<std::string>();
+    map["nickname"] = r[0]["nickname"].as<std::string>();
+    map["firstname"] = r[0]["firstname"].as<std::string>();
+    map["lastname"] = r[0]["lastname"].as<std::string>();
+    map["birthday"] = r[0]["birthday"].as<std::string>();
+    map["online"] = (r[0]["online"].as<std::string>() == "t") ? "true" : "false";
+    map["image"] = r[0]["image"].as<std::string>();
+    map["operator"] = (r[0]["operator"].as<std::string>() == "t") ?  "true" : "false";;
+    map["sessionid"] = r[0]["sessionid"].as<std::string>();
+
+}
