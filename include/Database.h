@@ -66,6 +66,7 @@ public:
 
 
     std::string getUserID(std::string email);
+    void getUserDataFrom(std::string uid, std::map<std::string, std::string> &map);
 
 private:
 	connection *conn;

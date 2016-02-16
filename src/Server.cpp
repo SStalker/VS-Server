@@ -97,15 +97,19 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 std::string userid = db.getUserID(document["values"]["email"].GetString());
 
                                 values.push_back(std::pair<std::string, std::string>("login","success"));
-                                values.push_back( param("uid", userid ) );
 
                                 //add sessionid to response
                                 int session = m_connections[hdl].sessionid;
                                 db.setSessionID(atoi(userid.c_str()), session);
 
-                                std::stringstream sid;
-                                sid << session;
-                                values.push_back( param("sid", sid.str()));
+                                std::map<std::string, std::string> map;
+
+                                db.getUserDataFrom(userid, map);
+
+                                for( auto &kv : map){
+                                    std::cout << kv.first << " has value: " << kv.second << std::endl;
+                                    values.push_back( param(kv.first, kv.second) );
+                                }
 
                                 //If client is webclient add template to the response
                                 if(document["values"].HasMember("webclient")){
@@ -113,6 +117,9 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 }
 
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
+
+                                // To be sure we delete all elements
+                                map.clear();
 
                                 //Send friendlist
                                 std::list<friendListUser> friendlist;
