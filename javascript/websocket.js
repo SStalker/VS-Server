@@ -129,14 +129,25 @@ function processMessage(data){
 		if(type === "friendRequest"){
 			console.log("friendRequest");
 			$.each(dataArray.values, function(){
-				console.log($(this)[0]);
+//				console.log($(this)[0]);
 				ResultModel.addRequest($(this)[0]);
 			});
 		}else if(type === "friendlist"){
 			console.log(dataArray);
 			$.each(dataArray.values, function(){
-				console.log($(this)[0]);
+//				console.log($(this)[0]);
 				ChatModel.addFriend($(this)[0]);
+			});
+		}else if(type === "notifyOnline"){
+			console.log(ChatModel.friends());
+			$.each(ChatModel.friends(), function(){
+				if($(this)[0].email() === dataArray.values.email){
+					if(dataArray.values.online === "true"){
+						$(this)[0].online(true);
+					}else{
+						$(this)[0].online(false);
+					}
+				}
 			});
 		}
 
@@ -172,23 +183,28 @@ function loadLogin(){
 
 $(document).ready(function(){
 
+	//define friendsobject
+	function friend( nickname, email, online, firstname, lastname, birthday, image, cid, chatname, chatstatusmsg ){
+		return{
+			'nickname' : ko.observable(nickname) ,
+			'email': ko.observable(email),
+			'online': ko.observable(online),
+			'firstname': ko.observable(firstname),
+			'lastname': ko.observable(lastname),
+			'birthday': ko.observable(birthday),
+			'imageb64': ko.observable(image),
+			'cid': ko.observable(cid),
+			'chatname': ko.observable(chatname),
+			'chatstatusmsg': ko.observable(chatstatusmsg)
+		};
+	};
+
 	ChatModel = {
 		friends: ko.observableArray(),
 
 		addFriend: function(user){
-			var friend ={
-				'nickname' : user.nickname ,
-				'email': user.email,
-				'online': user.online,
-				'firstname': user.firstname,
-				'lastname': user.lastname,
-				'birthday': user.birthday,
-				'imageb64': user.imageb64,
-				'cid': user.cid,
-				'chatname': user.chatname,
-				'chatstatusmsg': user.chatstatusmsg
-			}
-			this.friends.push(friend);
+			this.friends.push(new friend(user.nickname, user.email, user.online, user.firstname, user.lastname,
+						user.birthday, user.imageb64, user.cid, user.chatname, user.chatstatusmsg));
 		}
 	}
 

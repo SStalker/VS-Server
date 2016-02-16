@@ -19,7 +19,7 @@
 			<div class="lists">
 			  	<div id="friendlist">
 			  		<ul data-bind="foreach: friends">
-			  			<li><a><span data-bind="text: nickname"></span><span data-bind="if: online">(Online)</span><span data-bind="if: !online">(Offline)</span></a></li>
+			  			<li><a><span data-bind="text: nickname"></span><span data-bind="visible: online">(Online)</span></a></li>
 			  		</ul>
 			  	</div>
 			  	<div id="chatlist"></div>
