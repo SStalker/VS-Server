@@ -147,16 +147,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         }catch( const std::exception& e){
                             m_server.send(hdl, createError(e, "server"), msg->get_opcode());
                         }
-                    }else if(strcmp(document["request"].GetString(),"chatarea") == 0){
-                        //deploy new template for webclient
-                        std::vector<std::pair<std::string, std::string> > values;
-                        try{
-                            values.push_back( param("template", readTemplate( "../webclient-templates/chat.html")));
-                            m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
-                        }catch(const std::exception& e){
-                            //do something in case of failure
-                            m_server.send(hdl, createError(e, "server"), msg->get_opcode());
-                        }
                     }else if(strcmp(document["request"].GetString(),"logout") == 0 ){
 
                         std::vector<std::pair<std::string, std::string> > values;
@@ -182,10 +172,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             search << "%" << document["values"]["searchUser"].GetString() << "%";
                             std::list<foundUsers> found = db.getSearchedUsers(search.str(), db.getUserIDFromSession(m_connections[hdl].sessionid));
                             m_server.send(hdl, responseSearchedList("response", document["request"].GetString(), found) ,msg->get_opcode());
-
-                        }else if(document["values"].HasMember("webclient")){
-                            values.push_back( param("template", readTemplate( "../webclient-templates/searchFriends.html")));
-                            m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                         }
 
                     }else if(strcmp(document["request"].GetString(),"addFriend") == 0 ){
