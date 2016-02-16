@@ -122,7 +122,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 //Send friend open requests
                                 std::list<foundUsers> requests;
                                 requests = db.getFriendRequests(db.getUserIDFromSession(session));
-                                m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
+                                //m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
 
                                 //notify friends
                                 values.clear();
@@ -145,6 +145,16 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         }catch( const pqxx::pqxx_exception& e){
                             m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                         }catch( const std::exception& e){
+                            m_server.send(hdl, createError(e, "server"), msg->get_opcode());
+                        }
+                    }else if(strcmp(document["request"].GetString(),"chatarea") == 0){
+                        //deploy new template for webclient
+                        std::vector<std::pair<std::string, std::string> > values;
+                        try{
+                            values.push_back( param("template", readTemplate( "../webclient-templates/chat.html")));
+                            m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
+                        }catch(const std::exception& e){
+                            //do something in case of failure
                             m_server.send(hdl, createError(e, "server"), msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"logout") == 0 ){
