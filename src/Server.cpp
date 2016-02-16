@@ -122,7 +122,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 //Send friend open requests
                                 std::list<foundUsers> requests;
                                 requests = db.getFriendRequests(db.getUserIDFromSession(session));
-                                //m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
+                                m_server.send(hdl, responseSearchedList("pushmsg", "friendRequest", requests), msg->get_opcode());
 
                                 //notify friends
                                 values.clear();
