@@ -128,8 +128,10 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 values.clear();
                                 values.push_back(param("email",document["values"]["email"].GetString()));
                                 values.push_back(param("online","true"));
+
+                                int id;
                                 for(auto con: m_connections){
-                                    int id = db.getUserIDFromSession(con.second.sessionid);
+                                    id = db.getUserIDFromSession(con.second.sessionid);
                                     for(auto user: friendlist){
                                         if(user.id == id){
                                             m_server.send(con.first, response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
@@ -153,13 +155,31 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         std::stringstream sid;
                         sid << m_connections[hdl].sessionid;
 
+                        int uid = db.getUserIDFromSession(atoi(sid.str().c_str()));
+
                         try{
-                            db.logoutClient(db.getUserIDFromSession(atoi(sid.str().c_str())));
-                            db.setSessionID(db.getUserIDFromSession(atoi(sid.str().c_str())) ,-1);
+                            db.logoutClient(uid);
+                            db.setSessionID(uid ,-1);
                             values.push_back(param("logout","success"));
                             m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
-                            //m_server.close(hdl,websocketpp::close::status::going_away, "Logged out");
 
+                            //notifyFriends
+                            values.clear();
+                            values.push_back(param("email",db.getEmail(uid)));
+                            values.push_back(param("online","false"));
+
+                            std::vector<int> friendIds = db.getFrindIds(uid);
+
+                            int id;
+                            for(auto con: m_connections){
+                                id = db.getUserIDFromSession(con.second.sessionid);
+                                for(auto friendid: friendIds){
+                                    if(friendid == id){
+                                        m_server.send(con.first, response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
+                                        continue;
+                                    }
+                                }
+                            }
                         }catch(const pqxx::pqxx_exception& e){
                             m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                         }

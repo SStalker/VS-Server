@@ -276,13 +276,6 @@ void Database::createChat(int uid, int friendID){
         ", " + w->quote(cid) +
         ")"
     );
-#if 0
-    w->exec(""
-            "UPDATE friends SET chatid=" + w->quote(cid) + ""
-            "WHERE (uid=" + w->quote(uid) + " AND fid=" +w->quote(friendID)+ " ) "
-               "OR (uid=" + w->quote(friendID) + " AND fid=" +w->quote(uid)+ " )"
-    );
-#endif
 
 }
 
@@ -297,6 +290,17 @@ std::__cxx11::string Database::getNickname(int uid){
     }else {
         return "-1";
     }
+}
+
+std::__cxx11::string Database::getEmail(int uid){
+    pqxx::result r = w->exec(
+                "SELECT email FROM users WHERE id="+ w->quote(uid)
+            );
+
+    std::string email = r[0]["email"].as<std::string>();
+
+    return email;
+
 }
 
 std::list< foundUsers > Database::getSearchedUsers(std::string search, int uid){
@@ -366,6 +370,29 @@ std::list<friendListUser> Database::getFriendlist(int uid){
     }
 
     return list;
+}
+
+std::vector<int> Database::getFrindIds(int uid){
+    std::vector<int> friends;
+
+    pqxx::result r = w->exec(
+        "SELECT DISTINCT ON(u.id) u.id, u.email, u.nickname, u. firstname, u.lastname, u.birthday, u.online, u.image, f.cid, c.name, c.status "
+        "FROM (SELECT * "
+                "FROM chatlist l "
+                "WHERE cid IN (SELECT l1.cid "
+                        "FROM chatlist l1 WHERE uid=" + w->quote(uid) +
+                        " ) AND NOT uid=" + w->quote(uid) +
+                " ) AS f "
+        "JOIN users u ON u.id=f.uid "
+        "JOIN chats c ON c.id=f.cid "
+        "WHERE c.chatroom=false"
+    );
+
+    for (auto id: r){
+        friends.push_back(id["id"].as<int>());
+    }
+
+    return friends;
 }
 
 int Database::getUserIDFromSession(int sessionid){

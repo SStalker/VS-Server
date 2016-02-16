@@ -50,6 +50,7 @@ public:
     std::list<std::string> getNewFriendshipRequests(rapidjson::Document &doc);
     std::list<std::string> getNewOfflineMessages(rapidjson::Document &doc);
     std::list<friendListUser> getFriendlist(int uid);
+    std::vector<int> getFrindIds(int uid);
     int getUserIDFromSession(int sessionid);
     int getSessionIDFromUser(int sessionid);
     bool userOnline(int id);
@@ -61,6 +62,7 @@ public:
     std::list<foundUsers> getFriendRequests(int uid);
     void createChat(int uid, int friendID);
     std::string getNickname(int uid);
+    std::string getEmail(int uid);
 
 
     std::string getUserID(std::string email);
