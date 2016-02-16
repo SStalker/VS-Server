@@ -266,7 +266,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                         if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
-                            int fid = atoi(db.getUserID(document["values"]["friendMail"].GetString()));
+                            int fid = atoi(db.getUserID(document["values"]["friendMail"].GetString()).c_str());
 
                             db.removeFriend(uid, fid);
                             responseValues.push_back(param("removeRequest", "success"));
