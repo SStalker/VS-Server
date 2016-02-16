@@ -234,11 +234,11 @@ std::list<foundUsers> Database::getFriendRequests(int uid){
                         "WHERE fi.fid=" + w->quote(uid) + " AND accepted=false"
                 );*/
     pqxx::result r = w->exec(
-        "SELECT u.email, u.nickname FROM users AS u WHERE u.id="
+        "SELECT u.email, u.nickname FROM users AS u WHERE u.id in"
         "("
-            "SELECT f.uid FROM friends AS f WHERE f.fid=" + w->quote(uid) + " AND f.accepted=false "
+            "SELECT f.uid as id FROM friends AS f WHERE f.fid=" + w->quote(uid) + " AND f.accepted=false "
             "UNION "
-            "SELECT f.fid FROM friends AS f WHERE f.uid=" + w->quote(uid) + " AND f.accepted=false"
+            "SELECT f.fid as id FROM friends AS f WHERE f.uid=" + w->quote(uid) + " AND f.accepted=false"
         ")"
     );
 
