@@ -10,6 +10,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
             return;
 
         m_server.init_asio(&ios);
+        m_server.set_reuse_addr(true);
         m_server.set_open_handler(bind(&WSServer::on_open,this,::_1));
         m_server.set_close_handler(bind(&WSServer::on_close,this,::_1));
         m_server.set_message_handler(bind(&WSServer::on_message,this,::_1,::_2));
@@ -45,6 +46,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
         try {
             rapidjson::Document document;
             document.Parse(msg->get_payload().c_str());
+
             /* ToDo:-create validator
              *      -create multiple missings otpions
              */
@@ -175,6 +177,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             values.push_back( param("template", readTemplate( "../webclient-templates/searchFriends.html")));
                             m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
                         }
+
                     }else if(strcmp(document["request"].GetString(),"addFriend") == 0 ){
                         std::vector<std::pair<std::string, std::string> > responseValues;
 
@@ -209,12 +212,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                             }
                         }
+
                     }else if(strcmp(document["request"].GetString(),"acceptFriend") == 0 ){
                         std::vector<std::pair<std::string, std::string> > responseValues;
 
                         if(document["values"].HasMember("friendMail") && document["values"].HasMember("answer") && document["values"]["friendMail"].IsString() &&  document["values"]["answer"].IsBool()){
 
-                            if(document["values"]["answer"].GetString()){
+                            if(document["values"]["answer"].GetBool()){
                                 //Get Client id's
                                 int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
                                 int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
