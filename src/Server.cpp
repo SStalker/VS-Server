@@ -154,7 +154,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         sid << m_connections[hdl].sessionid;
 
                         try{
-                            db.logoutClient(atoi(sid.str().c_str()));
+                            db.logoutClient(db.getUserIDFromSession(atoi(sid.str().c_str())));
                             db.setSessionID(db.getUserIDFromSession(atoi(sid.str().c_str())) ,-1);
                             values.push_back(param("logout","success"));
                             m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
