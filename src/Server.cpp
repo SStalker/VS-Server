@@ -261,8 +261,21 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             responseValues.push_back(param("acceptRequest", "failure"));
                             m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                         }
-                    }
+                    }else if(strcmp(document["request"].GetString(),"removeFriend") == 0 ){
+                        std::vector<std::pair<std::string, std::string> > responseValues;
 
+                        if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
+                            int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
+                            int fid = atoi(db.getUserID(document["values"]["friendMail"].GetString()));
+
+                            db.removeFriend(uid, fid);
+                            responseValues.push_back(param("removeRequest", "success"));
+                            m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                        }else{
+                            responseValues.push_back(param("removeRequest", "failure"));
+                            m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                        }
+                    }
                 }
             }
         } catch (const websocketpp::lib::error_code& e) {
