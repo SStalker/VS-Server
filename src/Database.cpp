@@ -154,13 +154,28 @@ bool Database::friendRequest(int uid, int fid){
     }
 }
 
-void Database::removeFriend(rapidjson::Document &doc){
+void Database::removeFriend(int uid, int fid){
 
     std::cout << "Database::removeFriend()" << std::endl;
 
-    pqxx::result r = w->exec(
-                "DELETE from COMPANY where ID = " + w->quote(doc["values"]["cid"].GetString())
-    );
+    w->exec("DELETE FROM friends WHERE (uid=" + w->quote(uid) + " AND fid=" +w->quote(fid) + ") "
+                                   "OR (uid=" + w->quote(fid) + " AND fid=" +w->quote(uid)
+           );
+
+    pqxx::result r = w->exec("SELECT cid FROM chatlist l "
+                             "JOIN chats c on c.id = l.cid "
+                             "WHERE l.cid IN ("
+                                 "SELECT l1.cid FROM chatlist l1 "
+                                 "WHERE uid=" + w->quote(uid) + " ) "
+                             "AND l.cid IN ("
+                                 "SELECT l1.cid FROM chatlist l1 "
+                                 "WHERE uid=" + w->quote(uid) + " ) "
+                             "AND NOT l.uid=" + w->quote(uid) + " "
+                             "AND c.chatroom=false"
+                            );
+    int cid = r[0]["cid"].as<int>();
+    w->exec("DELETE FROM chatlist WHERE cid=" + w->quote(cid));
+    w->exec("DELETE FROM chats WHERE cid=" + w->quote(cid));
 }
 
 void Database::createChatroom(rapidjson::Document &doc){
@@ -376,7 +391,7 @@ std::vector<int> Database::getFrindIds(int uid){
     std::vector<int> friends;
 
     pqxx::result r = w->exec(
-        "SELECT DISTINCT ON(u.id) u.id, u.email, u.nickname, u. firstname, u.lastname, u.birthday, u.online, u.image, f.cid, c.name, c.status "
+        "SELECT DISTINCT ON(u.id) u.id "
         "FROM (SELECT * "
                 "FROM chatlist l "
                 "WHERE cid IN (SELECT l1.cid "
