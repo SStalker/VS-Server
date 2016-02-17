@@ -129,11 +129,6 @@ bool Database::friendRequest(int uid, int fid){
         return false;
     }
 
-    /*
-        pqxx::result checkmail = w->exec(
-                    "SELECT email FROM users WHERE email"
-                );
-    */
     pqxx::result check = w->exec(
                     "SELECT uid,fid FROM friends "
                     "WHERE (uid=" + w->quote(uid) + " AND fid=" + w->quote(fid) + ") "
@@ -281,7 +276,7 @@ std::list<foundUsers> Database::getFriendRequests(int uid){
     return requests;
 }
 
-void Database::createChat(int uid, int friendID){
+int Database::createChat(int uid, int friendID){
     pqxx::result r  = w->exec(
                 "INSERT INTO chats(name) VALUES( " + w->quote(this->getNickname(uid) + " - " + this->getNickname(friendID)) +")"
                     " RETURNING id"
@@ -302,6 +297,7 @@ void Database::createChat(int uid, int friendID){
         ")"
     );
 
+    return cid;
 }
 
 std::__cxx11::string Database::getNickname(int uid){
@@ -395,6 +391,53 @@ std::list<friendListUser> Database::getFriendlist(int uid){
     }
 
     return list;
+}
+
+friendListUser Database::getFriendListUserFromID(int uid, int cid){
+
+    friendListUser row;
+    //returns friendlistUser information from uid
+    pqxx::result client = w->exec(
+                    "SELECT DISTINCT ON(u.id) u.id, u.email, u.nickname, u. firstname, u.lastname, u.birthday, u.online, u.image, f.cid, c.name, c.status FROM ("
+                        "SELECT * FROM chatlist l "
+                        "WHERE cid=" + w->quote(cid) +
+                        " AND uid=" + w->quote(uid) +
+                    " ) AS f "
+                    "JOIN users u ON u.id=f.uid "
+                    "JOIN chats c ON c.id=f.cid "
+                    "WHERE c.chatroom=false"
+                );
+
+    if (client.affected_rows() == 1){
+
+        row.id = client[0]["id"].as<int>();
+        row.nickname = client[0]["nickname"].as<std::string>();
+        row.email = client[0]["email"].as<std::string>();
+        row.online = client[0]["online"].as<bool>();
+        if(!client[0]["firstname"].is_null ()){
+            row.firstname = client[0]["firstname"].as<std::string>();
+        }
+        if(!client[0]["lastname"].is_null()){
+            row.lastname = client[0]["lastname"].as<std::string>();
+        }
+        if(!client[0]["birthday"].is_null()){
+            row.birthday = client[0]["birthday"].as<std::string>();
+        }
+        if(!client[0]["image"].is_null()){
+            row.imageb64 = client[0]["image"].as<std::string>();
+        }
+        if(!client[0]["cid"].is_null()){
+            row.cid = client[0]["cid"].as<std::string>();
+        }
+        if(!client[0]["name"].is_null()){
+            row.chatname = client[0]["name"].as<std::string>();
+        }
+        if(!client[0]["status"].is_null()){
+            row.chatstatusmsg = client[0]["status"].as<std::string>();
+        }
+    }
+
+    return row;
 }
 
 std::vector<int> Database::getFrindIds(int uid){
