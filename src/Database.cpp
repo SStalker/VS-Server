@@ -198,7 +198,17 @@ void Database::chatroomNewMessage(rapidjson::Document &doc){
 
 }
 
-void Database::newMessage(rapidjson::Document &doc){
+void Database::newMessage(int uid, int cid, std::string msg, bool transmitted){
+
+    pqxx::result r = w->exec(
+            "INSERT INTO messages(uid, cid, content, transmitted) "
+            "VALUES (" +
+            w->quote(uid) + ", " +
+        w->quote(cid) + ", " +
+        w->quote(msg) + ", " +
+        w->quote(transmitted) + ")"
+    );
+
 
 }
 
@@ -434,12 +444,18 @@ int Database::getSessionIDFromUser(int id){
 }
 
 bool Database::userOnline(int id){
+    std::cout << "userOnline: " << id << std::endl;
     pqxx::result r = w->exec(""
                              "SELECT online FROM users "
                              "WHERE id =" + w->quote( id )
     );
 
-    return r[0]["online"].as<bool>();
+
+    if(r.affected_rows() != 1){
+        //return false;
+    }
+
+    return (r[0]["online"].as<std::string>() == "t") ? true : false;
 
 }
 
@@ -473,6 +489,26 @@ std::string Database::getUserID(std::string email){
 
     std::string id = r[0]["id"].as<std::string>();
     return id;
+}
+
+int Database::getUserID(int uid, int cid){
+    std::cout << "Search user id from cid: " << cid << std::endl;
+
+    /*  Ich verstehe noch nicht ganz wie das funktionieren soll
+        wenn hinter der cid ein user steckt wie bekomme ich dann sein user id?
+        Und wenn es ein Chatroom ist...
+    */
+    pqxx::result r = w->exec(
+        "SELECT uid FROM chatlist "
+        "WHERE cid=" + w->quote( cid ) +
+        " AND NOT uid=" + w->quote(uid)
+    );
+
+    if(r.affected_rows() != 1){
+        return -1;
+    }
+
+    return r[0]["uid"].as<int>();
 }
 
 std::list<std::string> Database::getNewFriendshipRequests(rapidjson::Document &doc){
@@ -509,4 +545,33 @@ void Database::getUserDataFrom(std::string uid, std::map<std::string, std::strin
     map["operator"] = (r[0]["operator"].as<std::string>() == "t") ?  "true" : "false";;
     map["sessionid"] = r[0]["sessionid"].as<std::string>();
 
+}
+
+bool Database::belongsChatIDToUser(int cid){
+
+    pqxx::result r = w->exec(
+        "SELECT chatroom FROM chats "
+        "WHERE id=" + w->quote( cid )
+    );
+
+    if(r.affected_rows() != 1){
+        return false;
+    }
+
+    return !(r[0]["chatroom"].as<std::string>() == "t") ? true : false;
+}
+
+void Database::getAllOnlineUsersOfChatroom(int cid, std::vector<int> &list){
+
+    pqxx::result r = w->exec(
+        "SELECT sessionid FROM users "
+        "WHERE online=true AND id IN ( SELECT uid FROM chatlist WHERE cid=" + w->quote( cid ) +")"
+    );
+
+    if(r.affected_rows() <= 0){
+        return;
+    }
+
+    for(auto user : r)
+        list.push_back(user["sessionid"].as<int>());
 }

@@ -43,7 +43,7 @@ public:
 	void chatroomRemoveClient(rapidjson::Document &doc);
 	void chatroomAddClient(rapidjson::Document &doc);
 	void chatroomNewMessage(rapidjson::Document &doc);
-	void newMessage(rapidjson::Document &doc);
+    void newMessage(int uid, int cid, std::string msg, bool transmitted);
 	void setStatus(rapidjson::Document &doc);
 	void setOperator(rapidjson::Document &doc);
     std::list<foundUsers> getSearchedUsers(std::string search, int uid);
@@ -51,7 +51,7 @@ public:
     std::list<std::string> getNewOfflineMessages(rapidjson::Document &doc);
     std::list<friendListUser> getFriendlist(int uid);
     std::vector<int> getFrindIds(int uid);
-    int getUserIDFromSession(int sessionid);
+    int getUserIDFromSession(int id);
     int getSessionIDFromUser(int sessionid);
     bool userOnline(int id);
     foundUsers getPubClientInformation(int id);
@@ -66,8 +66,12 @@ public:
 
 
     std::string getUserID(std::string email);
+    int getUserID(int uid, int cid);
     void getUserDataFrom(std::string uid, std::map<std::string, std::string> &map);
 
+    bool belongsChatIDToUser(int cid);
+
+    void getAllOnlineUsersOfChatroom(int cid, std::vector<int> &list);
 private:
 	connection *conn;
     nontransaction *w;
