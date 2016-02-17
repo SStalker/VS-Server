@@ -54,17 +54,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
             if(document.HasMember("request")
                     && document.HasMember("values")){
                 if(document["request"].IsString() && document["values"].IsObject()){
-#if 0
-                    if(strcmp(document["request"].GetString(),"registersite") == 0){
-                        //deploy new template for webclient
-                        try{
-                            m_server.send(hdl, buildTemplateJson( "../webclient-templates/register.html", "registersite"), msg->get_opcode());
-                        }catch(const exception& e){
-                            //do something in case of failure
-                            m_server.send(hdl, createError(e, "server"), msg->get_opcode());
-                        }
-                    }else
-#endif
                     if(strcmp(document["request"].GetString(),"registration") == 0){
                         //register new client in database
                         try{
@@ -146,6 +135,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                         }
                                     }
                                 }
+
                             }else{
                                 values.push_back(pair<string, string>("login","failed"));
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
@@ -165,8 +155,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         int uid = db.getUserIDFromSession(atoi(sid.str().c_str()));
 
                         try{
+                            //logout user from session
                             db.logoutClient(uid);
+
+                            //update session id in DB
                             db.setSessionID(uid ,-1);
+
+                            //Notify Client about succesfull logout
                             values.push_back(param("logout","success"));
                             m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
 
@@ -174,9 +169,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             values.clear();
                             values.push_back(param("email",db.getEmail(uid)));
                             values.push_back(param("online","false"));
-
                             vector<int> friendIds = db.getFrindIds(uid);
-
                             int id;
                             for(auto con: m_connections){
                                 id = db.getUserIDFromSession(con.second.sessionid);
@@ -187,31 +180,32 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     }
                                 }
                             }
+
                         }catch(const pqxx::pqxx_exception& e){
                             m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
                         }
                     }else if(strcmp(document["request"].GetString(),"searchUser") == 0 ){
-
-                        vector<pair<string, string> > values;
-
+                        //Vaidate JSON format
                         if(document["values"].HasMember("searchUser") && document["values"]["searchUser"].IsString()){
+                            //Get all users where search term is true
                             stringstream search;
                             search << "%" << document["values"]["searchUser"].GetString() << "%";
                             list<foundUsers> found = db.getSearchedUsers(search.str(), db.getUserIDFromSession(m_connections[hdl].sessionid));
+
+                            //Send List du Client
                             m_server.send(hdl, responseSearchedList("response", document["request"].GetString(), found) ,msg->get_opcode());
                         }
 
                     }else if(strcmp(document["request"].GetString(),"addFriend") == 0 ){
                         vector<pair<string, string> > responseValues;
-
+                        //Vaidate JSON format
                         if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
 
                             //Get Client id's
                             int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
-
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
-
+                            //Add to friendlist if possible
                             if(friendID != -1 && db.friendRequest(uid, friendID)){
 
                                 //Send notification to Clients
@@ -227,10 +221,12 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                             db.setFriendRequestTransmition(uid,friendID);
                                         }
                                     }
+                                    //Notify client
                                     responseValues.push_back(param("friendRequest", "success"));
                                     m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                                 }
                             }else{
+                                //Notify client
                                 responseValues.push_back(param("friendRequest", "failure"));
                                 m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                             }
@@ -238,40 +234,60 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                     }else if(strcmp(document["request"].GetString(),"acceptFriend") == 0 ){
                         vector<pair<string, string> > responseValues;
-
+                        //Vaidate JSON format
                         if(document["values"].HasMember("friendMail") && document["values"].HasMember("answer") && document["values"]["friendMail"].IsString() &&  document["values"]["answer"].IsBool()){
-
+                            //Check if request was accepted by user
                             if(document["values"]["answer"].GetBool()){
                                 //Get Client id's
                                 int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
                                 int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
+                                //Set friendship as accepted
                                 db.acceptFriendRequest(uid, friendID);
                                 responseValues.push_back(param("acceptRequest","success"));
                                 responseValues.push_back(param("friendMail", document["values"]["friendMail"].GetString()));
+
+                                //notify accepting client
                                 m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
 
                                 //Create chat for friends
-                                db.createChat(uid, friendID);
+                                int cid = db.createChat(uid, friendID);
 
-                                //Send Friendlist update/new user
+                                // Get friendListUser for new friend to add to present friendlist in Client
+                                list<friendListUser> tmp;
+                                tmp.push_back(db.getFriendListUserFromID(friendID, cid));
+                                m_server.send(hdl, sendFriendlist("push", "newFriendListUser", tmp) ,msg->get_opcode());
+
+                                //Send Friendlist user if user is online, else do nothing.
+                                if(db.userOnline(friendID)){
+                                    //Get friendListUser for yourself to add to present friendlist in friends CLient
+                                    tmp.clear();
+                                    tmp.push_back(db.getFriendListUserFromID(uid, cid));
+                                    m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), sendFriendlist("push", "newFriendListUser", tmp) ,msg->get_opcode());
+                                }
                             }
 
                         }else{
+                            //Notify CLient that JSON was not valid/missing a parameter
                             responseValues.push_back(param("acceptRequest", "failure"));
                             m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                         }
                     }else if(strcmp(document["request"].GetString(),"removeFriend") == 0 ){
                         vector<pair<string, string> > responseValues;
-
+                        //Vaidate JSON format
                         if(document["values"].HasMember("friendMail") && document["values"]["friendMail"].IsString() ){
+                            //Get user id's
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
                             int fid = atoi(db.getUserID(document["values"]["friendMail"].GetString()).c_str());
 
+                            //Delete from friends and chats aswell as from chatlist
                             db.removeFriend(uid, fid);
+
+                            //Notify client
                             responseValues.push_back(param("removeRequest", "success"));
                             m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                         }else{
+                            //Notify client that JSON was not valid
                             responseValues.push_back(param("removeRequest", "failure"));
                             m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
                         }
@@ -279,6 +295,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                         vector<pair<string, string> > values;
 
+                        //Vaidate JSON format
                         if(document["values"].HasMember("messageFrom") && document["values"]["messageFrom"].IsString() &&
                             document["values"].HasMember("messageTo") && document["values"]["messageTo"].IsInt() &&
                             document["values"].HasMember("message") && document["values"]["message"].IsString()
