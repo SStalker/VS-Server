@@ -255,14 +255,14 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 // Get friendListUser for new friend to add to present friendlist in Client
                                 list<friendListUser> tmp;
                                 tmp.push_back(db.getFriendListUserFromID(friendID, cid));
-                                m_server.send(hdl, sendFriendlist("push", "newFriendListUser", tmp) ,msg->get_opcode());
+                                m_server.send(hdl, sendFriendlist("pushmsg", "newFriendListUser", tmp) ,msg->get_opcode());
 
                                 //Send Friendlist user if user is online, else do nothing.
                                 if(db.userOnline(friendID)){
                                     //Get friendListUser for yourself to add to present friendlist in friends CLient
                                     tmp.clear();
                                     tmp.push_back(db.getFriendListUserFromID(uid, cid));
-                                    m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), sendFriendlist("push", "newFriendListUser", tmp) ,msg->get_opcode());
+                                    m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), sendFriendlist("pushmsg", "newFriendListUser", tmp) ,msg->get_opcode());
                                 }
                             }else{
                                 // If not accepted
