@@ -38,6 +38,7 @@ public:
     void logoutClient(int uid);
     void addFriendToChat(std::string cid, std::string uid);
     bool friendRequest(int uid, int fid);
+    bool removeRequest(int uid, int fid);
     void removeFriend(int uid, int fid);
 	void createChatroom(rapidjson::Document &doc);
 	void removeChatroom(rapidjson::Document &doc);

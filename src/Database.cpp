@@ -149,6 +149,21 @@ bool Database::friendRequest(int uid, int fid){
     }
 }
 
+bool Database::removeRequest(int uid, int fid){
+    std::cout << "Database::removeFriend()" << std::endl;
+
+    pqxx::result r =w->exec("DELETE FROM friends WHERE (uid=" + w->quote(uid) + " AND fid=" +w->quote(fid) + ") "
+                               "OR (uid=" + w->quote(fid) + " AND fid=" +w->quote(uid)
+           );
+
+    if(r.affected_rows() > 1){
+        return true;
+    }else{
+        return false;
+    }
+
+}
+
 void Database::removeFriend(int uid, int fid){
 
     std::cout << "Database::removeFriend()" << std::endl;

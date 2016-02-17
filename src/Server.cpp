@@ -235,11 +235,11 @@ WSServer::WSServer() : m_next_sessionid(1) {
                         vector<pair<string, string> > responseValues;
                         //Vaidate JSON format
                         if(document["values"].HasMember("friendMail") && document["values"].HasMember("answer") && document["values"]["friendMail"].IsString() &&  document["values"]["answer"].IsBool()){
+                            //Get Client id's
+                            int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
+                            int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
                             //Check if request was accepted by user
                             if(document["values"]["answer"].GetBool()){
-                                //Get Client id's
-                                int friendID = atoi( db.getUserID( document["values"]["friendMail"].GetString() ).c_str() );
-                                int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
 
                                 //Set friendship as accepted
                                 db.acceptFriendRequest(uid, friendID);
@@ -264,6 +264,16 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     tmp.push_back(db.getFriendListUserFromID(uid, cid));
                                     m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), sendFriendlist("push", "newFriendListUser", tmp) ,msg->get_opcode());
                                 }
+                            }else{
+                                // If not accepted
+                                if(db.removeRequest(uid, friendID)){
+                                    responseValues.push_back(param("acceptRequest","success"));
+                                    m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                                }else{
+                                    responseValues.push_back(param("acceptRequest","failure"));
+                                    m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
+                                }
+
                             }
 
                         }else{
