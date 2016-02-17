@@ -125,6 +125,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 values.push_back(param("email",document["values"]["email"].GetString()));
                                 values.push_back(param("online","true"));
 
+                                vector<int> friends = db.getFrindIds(db.getUserIDFromSession(session));
+
+                                for(auto fid: friends){
+                                    if(db.userOnline(fid)){
+                                        m_server.send(get_hdl_from_session(db.getSessionIDFromUser(fid)), response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
+
+                                    }
+                                }
+#if 0
                                 int id;
                                 for(auto con: m_connections){
                                     id = db.getUserIDFromSession(con.second.sessionid);
@@ -135,7 +144,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                         }
                                     }
                                 }
-
+#endif
                                 //Send chats and messages
                                 list<chatList> chats = db.getChatsByUid(db.getUserIDFromSession(session));
                                 //send list to client
@@ -176,6 +185,14 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             values.push_back(param("email",db.getEmail(uid)));
                             values.push_back(param("online","false"));
                             vector<int> friendIds = db.getFrindIds(uid);
+
+                            for(auto friendid: friendIds){
+                                if(db.userOnline(friendid)){
+                                    m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendid)), response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
+
+                                }
+                            }
+#if 0
                             int id;
                             for(auto con: m_connections){
                                 id = db.getUserIDFromSession(con.second.sessionid);
@@ -186,6 +203,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     }
                                 }
                             }
+ #endif
 
                         }catch(const pqxx::pqxx_exception& e){
                             m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
@@ -220,6 +238,9 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     foundUsers from = db.getPubClientInformation(uid);
                                     values.push_back(from);
 
+                                    m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), responseSearchedList("pushmsg", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
+
+#if 0
                                     for(auto con: m_connections){
                                         cout << "Send Friend request" << endl;
                                         if(db.getSessionIDFromUser(friendID) == con.second.sessionid){
@@ -227,6 +248,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                             db.setFriendRequestTransmition(uid,friendID);
                                         }
                                     }
+#endif
                                     //Notify client
                                     responseValues.push_back(param("friendRequest", "success"));
                                     m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
@@ -323,10 +345,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             int cid = document["values"]["messageTo"].GetInt();
                             vector<int> uidResult = db.getUserID(uid, cid);
 
-                            // set the response
-                            values.push_back( param("messageFrom", document["values"]["messageFrom"].GetString()) );
-                            values.push_back( param("messageTo", to_string(document["values"]["messageTo"].GetInt())) );
-                            values.push_back( param("message",document["values"]["message"].GetString()) );
 
                             // if it is a simple user
                             //if(db.belongsChatIDToUser(cid)){
@@ -336,12 +354,33 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 if(db.userOnline( uidFromCid )){
                                     cout << "User " << uidFromCid << " is online" << endl;
                                     int sessionID = db.getSessionIDFromUser(uidFromCid);
-                                    m_server.send(get_hdl_from_session(sessionID), response("response", document["request"].GetString(), values), msg->get_opcode());
                                     cout << "Message will be stored from online user" << endl;
-                                    db.newMessage(uid, cid, document["values"]["message"].GetString(), true);
+                                    int mid = db.newMessage(uid, cid, document["values"]["message"].GetString(), true);
+
+                                    //Directly retriev message to get also auto created values and deliver it to the Client
+                                    messageContainer message = db.getMessage(mid);
+
+                                    //set up converter stream
+                                    stringstream converter;
+                                    converter << message.id;
+
+                                    // set the response
+                                    values.push_back( param("id", converter.str() ) );
+                                    values.push_back( param("messageFrom", message.messageFrom) );
+
+                                    //clear stringstream
+                                    converter.str(string());
+                                    converter << message.messageTo;
+                                    values.push_back( param("messageTo", converter.str() ) );
+                                    values.push_back( param("message",message.message) );
+                                    values.push_back( param("created_at",message.created_at) );
+
+                                    m_server.send(get_hdl_from_session(sessionID), response("response", document["request"].GetString(), values), msg->get_opcode());
+
                                 }else{
                                     cout << "User " << uidFromCid << " is offline message will be stored" << endl;
                                     db.newMessage(uid, cid, document["values"]["message"].GetString(), false);
+
                                 }
 
 

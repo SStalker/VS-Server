@@ -229,6 +229,21 @@ int Database::newMessage(int uid, int cid, std::string msg, bool transmitted){
 
 }
 
+messageContainer Database::getMessage(int mid){
+    messageContainer msg;
+    pqxx::result message = w->exec(
+                    "SELECT id, uid, cid, content, created_at FROM messages WHERE id=" + w->quote(mid)
+                );
+
+    msg.id = message[0]["id"].as<int>();
+    msg.messageFrom = message[0]["messageFrom"].as<std::string>();
+    msg.messageTo = message[0]["messageTo"].as<int>();
+    msg.message = message[0]["message"].as<std::string>();
+    msg.created_at = message[0]["created_at"].as<std::string>();
+
+    return msg;
+}
+
 void Database::setStatus(rapidjson::Document &doc){
 
 }
