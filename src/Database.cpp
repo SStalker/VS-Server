@@ -25,6 +25,9 @@ bool Database::connect(){
 
         w = new nontransaction(*conn);
 
+        // This will reset the online status and set sessionids to -1
+        w->exec("UPDATE users SET online=false, sessionid=-1");
+
         std::cout << "ID from test@test.de: " << getUserID("test@test.de") << std::endl;
 
         return true;
