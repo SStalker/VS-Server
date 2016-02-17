@@ -564,7 +564,7 @@ std::vector<int> Database::getUserID(int uid, int cid){
     );
 
     for(auto row: r){
-        result.push_back(row["id"].as<int>());
+        result.push_back(row["uid"].as<int>());
     }
 
     return result;
