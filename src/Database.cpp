@@ -212,7 +212,7 @@ void Database::chatroomNewMessage(rapidjson::Document &doc){
 
 }
 
-void Database::newMessage(int uid, int cid, std::string msg, bool transmitted){
+int Database::newMessage(int uid, int cid, std::string msg, bool transmitted){
 
     pqxx::result r = w->exec(
             "INSERT INTO messages(uid, cid, content, transmitted) "
@@ -221,7 +221,10 @@ void Database::newMessage(int uid, int cid, std::string msg, bool transmitted){
         w->quote(cid) + ", " +
         w->quote(msg) + ", " +
         w->quote(transmitted) + ")"
+            " RETURNING id"
     );
+
+    return r[0]["id"].as<int>();
 
 
 }

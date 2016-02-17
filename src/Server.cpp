@@ -136,6 +136,13 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                     }
                                 }
 
+                                //Send chats and messages
+                                list<chatList> chats = db.getChatsByUid(db.getUserIDFromSession(session));
+                                //send list to client
+                                m_server.send(hdl, sendChats("pushmsg","chatlist",chats) ,msg->getopdoce());
+
+
+
                             }else{
                                 values.push_back(pair<string, string>("login","failed"));
                                 m_server.send(hdl, response("response", document["request"].GetString(), values) ,msg->get_opcode());
@@ -573,6 +580,67 @@ WSServer::WSServer() : m_next_sessionid(1) {
             writer.EndObject();
 
             return buffer.GetString();
+        }catch (const exception& e) {
+            cout << "Failed to build json: (" << e.what() << ")" << endl;
+        }
+    }
+
+    const string WSServer::sendChats(string key, string responsetype, list<chatList> chats){
+        try{
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+            writer.StartObject();
+
+            writer.Key(key.c_str());
+            writer.String(responsetype.c_str());
+
+            writer.Key("values");
+            writer.StartArray();
+
+            for(chatList chat : chats){
+                writer.StartObject();
+
+                writer.Key("id");
+                writer.Int(chat.id);
+
+                writer.Key("name");
+                writer.String(chat.name.c_str());
+
+                writer.Key("status");
+                writer.String(chat.status.c_str());
+
+                writer.Key("messages");
+                writer.StartArray();
+
+                for(messageContainer message: chat.messages){
+                    writer.StartObject();
+
+                    writer.Key("id");
+                    writer.Int(message.id);
+
+                    writer.Key("messageFrom");
+                    writer.String(message.messageFrom.c_str());
+
+                    writer.Key("messageTo");
+                    writer.Int(message.messageTo);
+
+                    writer.Key("message");
+                    writer.String(message.message.c_str());
+
+                    writer.Key("created_at");
+                    writer.String(message.created_at.c_str());
+
+                    writer.EndObject();
+                }
+                writer.EndArray();
+                writer.EndObject();
+            }
+            writer.EndArray();
+            writer.EndObject();
+
+            return buffer.GetString();
+
         }catch (const exception& e) {
             cout << "Failed to build json: (" << e.what() << ")" << endl;
         }

@@ -75,6 +75,7 @@ private:
     const string response(string key, string responsetype, vector<pair<string, string>> response);
     const string responseSearchedList(string key, string responsetype, list<foundUsers> responseList);
     const string sendFriendlist(string key, string responsetype, list<friendListUser> responseList);
+    const string sendChats(string key, string responsetype, list<chatList> chats);
     const string createError(const exception& e, string from );
     const string readTemplate(string filename);
     const string buildTemplateJson(string filename, string responsetype);
