@@ -139,7 +139,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 //Send chats and messages
                                 list<chatList> chats = db.getChatsByUid(db.getUserIDFromSession(session));
                                 //send list to client
-                                m_server.send(hdl, sendChats("pushmsg","chatlist",chats) ,msg->getopdoce());
+                                m_server.send(hdl, sendChats("pushmsg","chatlist",chats) ,msg->get_opcode());
 
 
 
