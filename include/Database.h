@@ -27,6 +27,21 @@ struct friendListUser{
     std::string chatstatusmsg;
 };
 
+struct messageContainer{
+    int id;
+    std::string messageFrom;
+    int messageTo ;
+    std::string message;
+    std::string created_at;
+};
+
+struct chatList{
+    int id;
+    std::string name;
+    std::string status;
+    std::vector<messageContainer> messages;
+};
+
 class Database{
 
 public:
@@ -64,6 +79,7 @@ public:
     void acceptFriendRequest(int uid, int fid);
     std::list<foundUsers> getFriendRequests(int uid);
     int createChat(int uid, int friendID);
+    std::list<chatList>getChatsByUid(int uid);
     std::string getNickname(int uid);
     std::string getEmail(int uid);
 

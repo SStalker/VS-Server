@@ -319,6 +319,54 @@ int Database::createChat(int uid, int friendID){
     return cid;
 }
 
+std::list<chatList> Database::getChatsByUid(int uid){
+
+    std::list<chatList> list;
+
+    //get all chats from one user
+    pqxx::result chats = w->exec(
+                "SELECT id, name, status "
+                "FROM chatlist l "
+                "JOIN chats c ON c.id=l.cid "
+                "WHERE uid=" + w->quote(uid) +
+                " AND c.chatroom=false"
+            );
+
+
+    for(auto chat: chats){
+        //create new chat structure
+        chatList chatlist;
+
+        chatlist.id = chat["id"].as<int>();
+        chatlist.name = chat["name"].as<std::string>();
+        if(!chat["status"].is_null()){
+            chatlist.status = chat["status"].as<std::string>();
+        }
+
+        //get all messages to this chat
+        pqxx::result messages = w->exec(
+                        "SELECT m.id, u.email as from, cid as to, content as message, created_at FROM messages m JOIN users u on u.id=m.uid WHERE cid=" + w->quote(chat["id"].as<int>())
+                    );
+        //put every message in a message struct to store in chat struct
+        for(auto cmsg: messages){
+            messageContainer msg;
+            msg.id = cmsg["id"].as<int>();
+            msg.messageFrom = cmsg["from"].as<std::string>();
+            msg.messageTo = cmsg["to"].as<int>();
+            msg.message = cmsg["message"].as<std::string>();
+            msg.created_at = cmsg["created_at"].as<std::string>();
+
+            chatlist.messages.push_back(msg);
+        }
+
+        //put chat into return list
+        list.push_back(chatlist);
+    }
+
+    return list;
+
+}
+
 std::__cxx11::string Database::getNickname(int uid){
 
     pqxx::result r = w->exec(
