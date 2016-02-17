@@ -3,6 +3,7 @@
 #include <list>
 #include <regex>
 #include <pqxx/pqxx>
+#include <vector>
 #include <rapidjson/document.h>
 
 using namespace pqxx;
@@ -67,7 +68,7 @@ public:
 
 
     std::string getUserID(std::string email);
-    int getUserID(int uid, int cid);
+    std::vector<int> getUserID(int uid, int cid);
     void getUserDataFrom(std::string uid, std::map<std::string, std::string> &map);
 
     bool belongsChatIDToUser(int cid);

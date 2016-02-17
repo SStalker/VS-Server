@@ -149,10 +149,9 @@ WSServer::WSServer() : m_next_sessionid(1) {
                     }else if(strcmp(document["request"].GetString(),"logout") == 0 ){
 
                         vector<pair<string, string> > values;
-                        stringstream sid;
-                        sid << m_connections[hdl].sessionid;
+                        int sid = m_connections[hdl].sessionid;
 
-                        int uid = db.getUserIDFromSession(atoi(sid.str().c_str()));
+                        int uid = db.getUserIDFromSession(sid);
 
                         try{
                             //logout user from session
@@ -305,7 +304,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                             int uid = db.getUserIDFromSession(m_connections[hdl].sessionid);
                             int cid = document["values"]["messageTo"].GetInt();
-                            int uidFromCid = db.getUserID(uid, cid);
+                            vector<int> uidResult = db.getUserID(uid, cid);
 
                             // set the response
                             values.push_back( param("messageFrom", document["values"]["messageFrom"].GetString()) );
@@ -313,8 +312,10 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             values.push_back( param("message",document["values"]["message"].GetString()) );
 
                             // if it is a simple user
-                            if(db.belongsChatIDToUser(cid)){
-                                 cout << "Message should be send to user" << endl;
+                            //if(db.belongsChatIDToUser(cid)){
+                            if(uidResult.size() == 1){
+                                cout << "Message should be send to user" << endl;
+                                int uidFromCid = uidResult[0];
                                 if(db.userOnline( uidFromCid )){
                                     cout << "User " << uidFromCid << " is online" << endl;
                                     int sessionID = db.getSessionIDFromUser(uidFromCid);
@@ -328,16 +329,21 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
 
                             // if it is a chatroom
-                            } else {
+                            } else if(uidResult.size() > 1){
                                 cout << "Message should be send to chatroom" << endl;
                                 // online chatroomusers
                                 vector<int> sessions;
                                 db.getAllOnlineUsersOfChatroom(cid, sessions);
 
-                                for(int session : sessions)
+                                for(int session : sessions){
                                     m_server.send(get_hdl_from_session(session), response("response", document["request"].GetString(), values), msg->get_opcode());
-
+                                }
                                 // TODO: the offline users msg must be saved in db for later transmitting
+                                 db.newMessage(uid, cid, document["values"]["message"].GetString(), true);
+                            } else {
+                                //uidResult < 1 error
+                                values.push_back(param("err_msg", "no chat found"));
+                                m_server.send(hdl, response("response", "error", values) ,msg->get_opcode());
                             }
                         }else{
                             values.push_back( param(document["request"].GetString(), "failure") );

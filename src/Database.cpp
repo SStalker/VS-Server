@@ -534,24 +534,22 @@ std::string Database::getUserID(std::string email){
     return id;
 }
 
-int Database::getUserID(int uid, int cid){
+std::vector<int> Database::getUserID(int uid, int cid){
     std::cout << "Search user id from cid: " << cid << std::endl;
 
-    /*  Ich verstehe noch nicht ganz wie das funktionieren soll
-        wenn hinter der cid ein user steckt wie bekomme ich dann sein user id?
-        Und wenn es ein Chatroom ist...
-    */
+    std::vector<int> result;
+
     pqxx::result r = w->exec(
-        "SELECT uid FROM chatlist "
-        "WHERE cid=" + w->quote( cid ) +
-        " AND NOT uid=" + w->quote(uid)
+                "SELECT uid FROM chatlist "
+                "WHERE cid=" + w->quote( cid ) +
+                " AND NOT uid=" + w->quote(uid)
     );
 
-    if(r.affected_rows() != 1){
-        return -1;
+    for(auto row: r){
+        result.push_back(row["id"].as<int>());
     }
 
-    return r[0]["uid"].as<int>();
+    return result;
 }
 
 std::list<std::string> Database::getNewFriendshipRequests(rapidjson::Document &doc){
