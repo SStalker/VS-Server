@@ -345,41 +345,41 @@ WSServer::WSServer() : m_next_sessionid(1) {
                             int cid = document["values"]["messageTo"].GetInt();
                             vector<int> uidResult = db.getUserID(uid, cid);
 
+                            cout << "Message will be stored from online user" << endl;
+                            int mid = db.newMessage(uid, cid, document["values"]["message"].GetString(), false);
+
+                            //Directly retriev message to get also auto created values and deliver it to the Client
+                            messageContainer message = db.getMessage(mid);
+
+                            //set up converter stream
+                            stringstream converter;
+                            converter << message.id;
+
+                            // set the response
+                            values.push_back( param("id", converter.str() ) );
+                            values.push_back( param("messageFrom", message.messageFrom) );
+
+                            //clear stringstream
+                            converter.str(string());
+                            converter << message.messageTo;
+                            values.push_back( param("messageTo", converter.str() ) );
+                            values.push_back( param("message",message.message) );
+                            values.push_back( param("created_at",message.created_at) );
+
+                            m_server.send(hdl, response("response", document["request"].GetString(), values), msg->get_opcode());
 
                             // if it is a simple user
-                            //if(db.belongsChatIDToUser(cid)){
                             if(uidResult.size() == 1){
                                 cout << "Message should be send to user" << endl;
                                 int uidFromCid = uidResult[0];
                                 if(db.userOnline( uidFromCid )){
                                     cout << "User " << uidFromCid << " is online" << endl;
                                     int sessionID = db.getSessionIDFromUser(uidFromCid);
-                                    cout << "Message will be stored from online user" << endl;
-                                    int mid = db.newMessage(uid, cid, document["values"]["message"].GetString(), true);
-
-                                    //Directly retriev message to get also auto created values and deliver it to the Client
-                                    messageContainer message = db.getMessage(mid);
-
-                                    //set up converter stream
-                                    stringstream converter;
-                                    converter << message.id;
-
-                                    // set the response
-                                    values.push_back( param("id", converter.str() ) );
-                                    values.push_back( param("messageFrom", message.messageFrom) );
-
-                                    //clear stringstream
-                                    converter.str(string());
-                                    converter << message.messageTo;
-                                    values.push_back( param("messageTo", converter.str() ) );
-                                    values.push_back( param("message",message.message) );
-                                    values.push_back( param("created_at",message.created_at) );
-
                                     m_server.send(get_hdl_from_session(sessionID), response("response", document["request"].GetString(), values), msg->get_opcode());
-
+                                    db.setMessageTransmitted(mid, true);
                                 }else{
                                     cout << "User " << uidFromCid << " is offline message will be stored" << endl;
-                                    db.newMessage(uid, cid, document["values"]["message"].GetString(), false);
+                                    //db.newMessage(uid, cid, document["values"]["message"].GetString(), false);
 
                                 }
 
@@ -390,14 +390,15 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 // online chatroomusers
                                 vector<int> sessions;
                                 db.getAllOnlineUsersOfChatroom(cid, sessions);
+                                // TODO: the offline users msg must be saved in db for later transmitting
+                                //int mid = db.newMessage(uid, cid, document["values"]["message"].GetString(), true);
 
                                 for(int session : sessions){
                                     m_server.send(get_hdl_from_session(session), response("response", document["request"].GetString(), values), msg->get_opcode());
                                 }
-                                // TODO: the offline users msg must be saved in db for later transmitting
-                                 db.newMessage(uid, cid, document["values"]["message"].GetString(), true);
                             } else {
                                 //uidResult < 1 error
+                                values.clear();
                                 values.push_back(param("err_msg", "no chat found"));
                                 m_server.send(hdl, response("response", "error", values) ,msg->get_opcode());
                             }
