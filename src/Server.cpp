@@ -36,6 +36,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
         
         cout << "Closing connection " << data.name 
                   << " with sessionid " << data.sessionid << endl;
+        db.logoutClient(db.getUserIDFromSession(data.sessionid));
         db.setSessionID(db.getUserIDFromSession(data.sessionid), -1);
         
         m_connections.erase(hdl);
