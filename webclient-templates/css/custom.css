@@ -1,0 +1,173 @@
+button{
+    cursor: pointer;
+}
+
+.login form label, .login form label input, .login form input,
+.register form label, .register form label input, .register form input,
+.buttons{
+    display: block;
+    margin: 10px 0;
+}
+
+.login form > input,
+.register form > input,
+.buttons #back,
+.login #register button{
+    width:200px;
+}
+
+.login, .register{
+    margin: 0 auto;
+    height:800 px;
+    width: 200px;
+}
+
+.login #register{
+    margin: 25px 0;
+}
+
+
+.intern-wrapper, #site-status{
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.main-menu{
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #666;
+}
+
+.main-menu .menubtn{
+    display: flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.main-menu .menubtn button{
+    margin: 0 5px;
+    width: 200px;
+}
+
+
+.chat ul{
+    list-style: none;
+}
+
+.chat{
+    display: flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-direction: column;
+}
+
+.chat-wrapper{
+    width:850px;
+}
+
+.chatwindow{
+    border: 1px solid #ddd;
+}
+
+.chatwindow h4{
+    text-align: center;
+}
+
+.messagecontainer{
+    height: 600px;
+    overflow-y: scroll;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+.send{
+    width: 85%;
+    margin: 10px 10px;
+}
+
+.message-row{
+    display: flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 10px;
+    margin: 0;
+}
+
+.message-row p {
+    margin: 6px;
+}
+
+.message-row .isOwn_true, .message-row .isOwn_false{
+    width: 700px;
+    padding: 5px;
+    border: 1px dotted #aaa;
+    border-radius: 5px;
+}
+
+.isOwn_true{
+    align-self: flex-end;
+    text-align: right;
+}
+
+.isOwn_false{
+    align-self: flex-start;
+}
+
+.time{
+    display:block;
+    padding-top:3px;
+    border-top: 1px solid #ddd;
+    font-size: 12px;
+}
+
+.footer{
+    text-align: center;
+    border-top: 1px solid #666;
+}
+
+#chatarea, #searchFriends, .chatwindow {
+    display:none;
+}
+
+#friendlist{
+    width: 350px;
+    height: 100%;
+    background-color: #eee;
+}
+
+#friendlist h4{
+    margin-top: 0px;
+    padding-top: 25px;
+    text-align: center;
+}
+
+#friendlist > div > div > button{
+    margin: 5px 25px;
+    width: 200px;
+}
+
+#chatarea{
+    min-height: 694px;
+    display: flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-direction: row;
+}
+
+#searchFriends{
+    width: 1200px;
+}
+
+#site-status{
+    margin: 25px auto;
+}
+

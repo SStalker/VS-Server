@@ -1,30 +1,45 @@
 <div class="chat">
 	<div class="main-menu" >
-		<p>Menü</p>
-	  	<ul>
-		  	<li>
-		  	  <a id="searchFriend" href="#" >Freund hinzufügen</a>
-		  	</li>
-		  	<li>
-		  	  <a id="toChatarea" href="#
-		  	    ">Chat</a>
-		  	</li>
-		  	<li>
-		  	  <a id="logout" href="#" >Logout</a>
-		  	</li>
-		</ul>
+                <h2>Menü</h2>
+                <div class="menubtn">
+                        <button id="searchFriend" href="#" >Freund hinzufügen</button>
+                        <button id="toChatarea" href="#">Chat</button>
+                        <button id="logout" href="#" >Logout</button>
+                </div>
 	</div>
   	<div class="intern-wrapper">
 		<div id="chatarea">
 			<div class="lists">
 			  	<div id="friendlist">
-			  		<ul data-bind="foreach: friends">
-			  			<li><a><span data-bind="text: nickname"></span><span data-bind="visible: online">(Online)</span></a></li>
-			  		</ul>
+                                        <h4>Freundesliste</h4>
+                                        <div data-bind="foreach: friends">
+                                                <div><button class="toChat" data-bind="attr: {value: cid}" ><span data-bind="text: nickname"></span></button><span data-bind="visible: online">(Online)</span></div>
+                                        </div>
 			  	</div>
 			  	<div id="chatlist"></div>
 			</div>
-			<div class="chat-wrapper"></div>
+                        <div class="chat-wrapper" data-bind="foreach: chats">
+                                <div class="chatwindow" data-bind="attr: {id: 'chat_' + id} ">
+                                    <div>
+                                        <span><h4 data-bind="text: name"></h4></span>
+                                        <!--img data-bind="attr: {src: image}" -->
+                                    </div>
+                                    <div class="messagecontainer" data-bind="foreach: messages">
+                                        <div class="message-row">
+                                            <div data-bind="attr: {class: 'isOwn_' + own} ">
+                                                <p class="message" data-bind="text: message"></p>
+                                                <span class="time" data-bind="text: created_at"></span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <form class="input">
+                                        <input type="hidden" name="messageTo" data-bind="attr: {value: id}">
+                                        <input class="send" type="textarea" name="message" data-bind="attr: {id: 'send_' + id}" >
+                                        <button type="submit">Senden</button>
+                                    </form>
+                                </div>
+                        </div>
 		</div>
 
 		<div id="searchFriends">
@@ -38,6 +53,7 @@
 		  	  	</div>
 		  	</div>
 			<div id="search" >
+                                <h3>Suche:</h3>
 				<form id="searchFriend-form" >
 				  	<label>
 				  		Nutzername oder E-Mail Adresse eingeben:
@@ -46,9 +62,9 @@
 				  	<input type="submit" />
 				</form>
 				</div>
-				<div>
-				<h3>Suchergebnis:</h3>
-				<div id="results" class="">
+                        <div data-bind="visible: (users().length > 0)">
+                                <h3>Suchergebnis:</h3>
+                                <div id="results" class="">
 					<ul data-bind="foreach: users">
 						<li><span class="nickname" data-bind="text: nickname"></span>  ( <span class="email" data-bind="text: email"></span> )
 						<button class="add">Hinzufügen</button> </li>
