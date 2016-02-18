@@ -236,9 +236,9 @@ messageContainer Database::getMessage(int mid){
                 );
 
     msg.id = message[0]["id"].as<int>();
-    msg.messageFrom = message[0]["messageFrom"].as<std::string>();
-    msg.messageTo = message[0]["messageTo"].as<int>();
-    msg.message = message[0]["message"].as<std::string>();
+    msg.messageFrom = message[0]["uid"].as<std::string>();
+    msg.messageTo = message[0]["cid"].as<int>();
+    msg.message = message[0]["content"].as<std::string>();
     msg.created_at = message[0]["created_at"].as<std::string>();
 
     return msg;
