@@ -392,6 +392,24 @@ std::list<chatList> Database::getChatsByUid(int uid){
 
 }
 
+chatList Database::getChatById(int cid){
+
+    chatList chat;
+    pqxx::result r = w->exec("SELECT id, name, status "
+                             "FROM chats "
+                             "WHERE id=" + w->quote(cid) + " "
+                             "AND chatroom=false"
+                             );
+
+    chat.id = r[0]["id"].as<int>();
+    chat.name = r[0]["name"].as<std::string>();
+    if(!r[0]["status"].is_null()){
+        chat.status = r[0]["status"].as<std::string>();
+    }
+
+    return chat;
+}
+
 std::__cxx11::string Database::getNickname(int uid){
 
     pqxx::result r = w->exec(
@@ -548,8 +566,11 @@ std::vector<int> Database::getFrindIds(int uid){
         "WHERE c.chatroom=false"
     );
 
-    for (auto id: r){
-        friends.push_back(id["id"].as<int>());
+    if(r.affected_rows() > 0){
+
+        for (auto id: r){
+            friends.push_back(id["id"].as<int>());
+        }
     }
 
     return friends;
@@ -666,17 +687,56 @@ void Database::getUserDataFrom(std::string uid, std::map<std::string, std::strin
     if(r.affected_rows() != 1){
         return;
     }
-
-    map["id"] = r[0]["id"].as<std::string>();
-    map["email"] = r[0]["email"].as<std::string>();
-    map["nickname"] = r[0]["nickname"].as<std::string>();
-    map["firstname"] = r[0]["firstname"].as<std::string>();
-    map["lastname"] = r[0]["lastname"].as<std::string>();
-    map["birthday"] = r[0]["birthday"].as<std::string>();
-    map["online"] = (r[0]["online"].as<std::string>() == "t") ? "true" : "false";
-    map["image"] = r[0]["image"].as<std::string>();
-    map["operator"] = (r[0]["operator"].as<std::string>() == "t") ?  "true" : "false";;
-    map["sessionid"] = r[0]["sessionid"].as<std::string>();
+    if(!r[0]["id"].is_null()){
+        map["id"] = r[0]["id"].as<std::string>();
+    }else{
+        map["id"] = "";
+    }
+    if(!r[0]["email"].is_null()){
+        map["email"] = r[0]["email"].as<std::string>();
+    }else{
+        map["email"] = "";
+    }
+    if(!r[0]["nickname"].is_null()){
+        map["nickname"] = r[0]["nickname"].as<std::string>();
+    }else{
+        map["nickname"] = "";
+    }
+    if(!r[0]["firstname"].is_null()){
+        map["firstname"] = r[0]["firstname"].as<std::string>();
+    }else{
+        map["firstname"] = "";
+    }
+    if(!r[0]["lastname"].is_null()){
+        map["lastname"] = r[0]["lastname"].as<std::string>();
+    }else{
+        map["lastname"] = "";
+    }
+    if(!r[0]["birthday"].is_null()){
+        map["birthday"] = r[0]["birthday"].as<std::string>();
+    }else{
+        map["birthday"] = "";
+    }
+    if(!r[0]["online"].is_null()){
+        map["online"] = (r[0]["online"].as<std::string>() == "t") ? "true" : "false";
+    }else{
+        map["online"] = "";
+    }
+    if(!r[0]["image"].is_null()){
+        map["image"] = r[0]["image"].as<std::string>();
+    }else{
+        map["image"] = "";
+    }
+    if(!r[0]["operator"].is_null()){
+        map["operator"] = (r[0]["operator"].as<std::string>() == "t") ?  "true" : "false";
+    }else{
+        map["operator"] = "";
+    }
+    if(!r[0]["sessionid"].is_null()){
+        map["sessionid"] = r[0]["sessionid"].as<std::string>();
+    }else{
+        map["sessionid"] = "";
+    }
 
 }
 

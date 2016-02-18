@@ -82,6 +82,7 @@ public:
     std::list<foundUsers> getFriendRequests(int uid);
     int createChat(int uid, int friendID);
     std::list<chatList>getChatsByUid(int uid);
+    chatList getChatById(int cid);
     std::string getNickname(int uid);
     std::string getEmail(int uid);
 

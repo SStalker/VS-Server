@@ -134,18 +134,7 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                                     }
                                 }
-#if 0
-                                int id;
-                                for(auto con: m_connections){
-                                    id = db.getUserIDFromSession(con.second.sessionid);
-                                    for(auto user: friendlist){
-                                        if(user.id == id){
-                                            m_server.send(con.first, response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
-                                            continue;
-                                        }
-                                    }
-                                }
-#endif
+
                                 //Send chats and messages
                                 list<chatList> chats = db.getChatsByUid(db.getUserIDFromSession(session));
                                 //send list to client
@@ -193,18 +182,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                                 }
                             }
-#if 0
-                            int id;
-                            for(auto con: m_connections){
-                                id = db.getUserIDFromSession(con.second.sessionid);
-                                for(auto friendid: friendIds){
-                                    if(friendid == id){
-                                        m_server.send(con.first, response("pushmsg","notifyOnline", values), websocketpp::frame::opcode::text);
-                                        continue;
-                                    }
-                                }
-                            }
- #endif
 
                         }catch(const pqxx::pqxx_exception& e){
                             m_server.send(hdl, createError(e.base(), "database"), msg->get_opcode());
@@ -241,15 +218,6 @@ WSServer::WSServer() : m_next_sessionid(1) {
 
                                     m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), responseSearchedList("pushmsg", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
 
-#if 0
-                                    for(auto con: m_connections){
-                                        cout << "Send Friend request" << endl;
-                                        if(db.getSessionIDFromUser(friendID) == con.second.sessionid){
-                                            m_server.send(con.first, responseSearchedList("pushmsg", "friendRequest" ,values) ,websocketpp::frame::opcode::text);
-                                            db.setFriendRequestTransmition(uid,friendID);
-                                        }
-                                    }
-#endif
                                     //Notify client
                                     responseValues.push_back(param("friendRequest", "success"));
                                     m_server.send(hdl,response("response", document["request"].GetString(), responseValues), msg->get_opcode() );
@@ -287,12 +255,19 @@ WSServer::WSServer() : m_next_sessionid(1) {
                                 tmp.push_back(db.getFriendListUserFromID(friendID, cid));
                                 m_server.send(hdl, sendFriendlist("pushmsg", "newFriendListUser", tmp) ,msg->get_opcode());
 
+                                //get new chat and send it to user
+                                list<chatList> temp;
+                                temp.push_back(db.getChatById(cid));
+
+                                m_server.send(hdl, sendChats("pushmsg" , "newchat", temp), msg->get_opcode());
+
                                 //Send Friendlist user if user is online, else do nothing.
                                 if(db.userOnline(friendID)){
                                     //Get friendListUser for yourself to add to present friendlist in friends CLient
                                     tmp.clear();
                                     tmp.push_back(db.getFriendListUserFromID(uid, cid));
                                     m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), sendFriendlist("pushmsg", "newFriendListUser", tmp) ,msg->get_opcode());
+                                    m_server.send(get_hdl_from_session(db.getSessionIDFromUser(friendID)), sendChats("pushmsg" , "newchat", temp), msg->get_opcode());
                                 }
                             }else{
                                 // If not accepted
