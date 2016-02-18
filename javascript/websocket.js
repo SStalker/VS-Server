@@ -1,10 +1,11 @@
 //create a new websocket
 var url = "127.0.0.1";
 var urll = "192.168.2.107";
+var urlll = "iknowit.ddns.net";
 
 //var websocket = new WebSocket("ws://iknowit.ddns.net:1919");
 //var websocket = new WebSocket("ws://192.168.178.31:1919");
-var websocket = new WebSocket("ws://"+ url +":1919");
+var websocket = new WebSocket("ws://"+ urlll +":1919");
 var websocketOk;
 var myChatModel;
 var myResultModel;
@@ -65,7 +66,7 @@ function processMessage(data){
     //get the message type
     if(dataArray.response !== undefined){
         var type = dataArray.response;
-       //console.log(dataArray);
+        //console.log(dataArray);
          if(type === "registration"){
            //console.log(dataArray.values.message);
             if(dataArray.values.message === "success"){
@@ -125,15 +126,17 @@ function processMessage(data){
         if(pushtype === "friendRequest"){
            //console.log("friendRequest");
             $.each(dataArray.values, function(){
-//				console.log($(this)[0]);
+//				//console.log($(this)[0]);
                 myResultModel.addRequest($(this)[0]);
             });
         }else if(pushtype === "friendlist"){
            //console.log(dataArray);
             $.each(dataArray.values, function(){
-//				console.log($(this)[0]);
+//				//console.log($(this)[0]);
                 myChatModel.addFriend($(this)[0]);
             });
+        }else if(pushtype === "newFriendListUser"){
+            myChatModel.addFriend(dataArray.values[0]);
         }else if(pushtype === "notifyOnline"){
            //console.log(myChatModel.friends());
             $.each(myChatModel.friends(), function(){
@@ -146,6 +149,10 @@ function processMessage(data){
                 }
             });
         }else if(pushtype === "chatlist"){
+            $.each(dataArray.values, function(){
+                myChatModel.addChat($(this)[0]);
+            });
+        }else if(pushtype === "newchat"){
             $.each(dataArray.values, function(){
                 myChatModel.addChat($(this)[0]);
             });
@@ -297,9 +304,9 @@ $(document).ready(function(){
 	$(".wrapper").on('blur',"#confirm-password",function(){
 
 		if(confirmPW($("#password"),$("#confirm-password"))){
-			console.log("true");
+            //console.log("true");
 		}else{
-			console.log("false");
+            //console.log("false");
 		}
 	});
 	//Funktion to seriallize login form data
@@ -317,7 +324,7 @@ $(document).ready(function(){
 				if(x.name !== "confirm-password"){
 					data.values[x.name] = x.value;
 				}else{
-					console.log("Ignored: confirm-password");
+                    //console.log("Ignored: confirm-password");
 				}
 			});
 
@@ -349,7 +356,7 @@ $(document).ready(function(){
 	});
 
 	$('.wrapper').on('click', "#register" ,function(){
-		console.log("Load template");
+        //console.log("Load template");
 		$(".wrapper").load("webclient-templates/register.html", function( response, status, xhr ) {
             if ( status === "error" ) {
 			    	console.log("Sorry but there was an error: "+ xhr.status + " " + xhr.statusText );
@@ -372,7 +379,7 @@ $(document).ready(function(){
 		$(this).serializeArray().map(function(x){
 			data.values[x.name] = x.value;
 		});
-		console.log(data);
+        //console.log(data);
 		sendMessage(data);
 	});
 
@@ -390,20 +397,23 @@ $(document).ready(function(){
             data.values[x.name] = x.value;
         });
 
+        //Clear Textarea
+        $("#send_"+data.values.messageTo).val('');
+
         var tmp = data.values.messageTo;
         data.values.messageTo = parseInt(tmp,10);
 
-       //console.log(data);
+        //console.log(data);
         sendMessage(data);
     });
 
 	$('.wrapper').on('click', '#back',function(){
-		console.log("clicked back");
+        //console.log("clicked back");
 		loadLogin();
 	});
 
 	$(".wrapper").on('click', '#searchFriend', function(event){
-		console.log("friend");
+        //console.log("friend");
 		$("#chatarea").hide();
         $(".chatwindow").hide();
 		$("#searchFriends").show();
@@ -411,7 +421,7 @@ $(document).ready(function(){
 	});
 
 	$(".wrapper").on('click', '#toChatarea', function(event){
-		console.log("chat");
+        //console.log("chat");
 		$("#chatarea").show();
 		$("#searchFriends").hide();
 		event.preventDefault();
@@ -427,7 +437,7 @@ $(document).ready(function(){
     });
 
 	$('.wrapper').on('click', '#logout', function(event){
-		console.log("Logout");
+        //console.log("Logout");
 
 		var data = {
 			request: "logout",
@@ -436,7 +446,7 @@ $(document).ready(function(){
 			}
 		};
 		sendMessage(data);
-		console.log(data);
+        //console.log(data);
 		event.preventDefault();
 	});
 
@@ -451,7 +461,7 @@ $(document).ready(function(){
 			}
 		}
 		sendMessage(data);
-		console.log(data);
+        //console.log(data);
 		event.preventDefault();
 	});
 
@@ -467,10 +477,25 @@ $(document).ready(function(){
 			}
 		}
 		sendMessage(data);
-		console.log(data);
+        //console.log(data);
 		event.preventDefault();
 	});
 
+    $('.wrapper').on('click', '.decline', function(event){
+
+        var friendMail = $(this).parent().find(".email").text();
+
+        var data = {
+            request: "acceptFriend",
+            values: {
+                friendMail: friendMail,
+                answer: false
+            }
+        }
+        sendMessage(data);
+        //console.log(data);
+        event.preventDefault();
+    });
 
 
 });

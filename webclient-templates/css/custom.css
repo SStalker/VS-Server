@@ -85,6 +85,15 @@ button{
     border-bottom: 1px solid #ddd;
 }
 
+.inputcontainer{
+    display: flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .send{
     width: 85%;
     margin: 10px 10px;

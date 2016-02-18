@@ -33,11 +33,14 @@
                                         </div>
 
                                     </div>
-                                    <form class="input">
-                                        <input type="hidden" name="messageTo" data-bind="attr: {value: id}">
-                                        <input class="send" type="textarea" name="message" data-bind="attr: {id: 'send_' + id}" >
-                                        <button type="submit">Senden</button>
-                                    </form>
+                                    <div class="inputcontainer">
+                                        <textarea class="send" rows="4" name="message" form="input" data-bind="attr: {id: 'send_' + id, form: 'input_' + id}" ></textarea>
+                                        <form class="input" data-bind="attr: {id: 'input_' + id}">
+                                            <input type="hidden" name="messageTo" data-bind="attr: {value: id}">
+                                            <!--input class="send" type="text" name="message" data-bind="attr: {id: 'send_' + id}" -->
+                                            <button type="submit">Senden</button>
+                                        </form>
+                                    </div>
                                 </div>
                         </div>
 		</div>
@@ -48,7 +51,7 @@
 		  	  	<div id="requests">
 		  	  		<ul data-bind="foreach: requests">
 		  	  			<li><span class="nickname" data-bind="text: nickname"></span>  ( <span class="email" data-bind="text: email"></span> )
-						<button class="accept">Annehmen</button> </li>
+						<button class="accept">Annehmen</button>  <button class="decline">Ablehnen</button> </li>
 		  	  		</ul>
 		  	  	</div>
 		  	</div>
