@@ -353,7 +353,8 @@ std::list<chatList> Database::getChatsByUid(int uid){
                 "FROM chatlist l "
                 "JOIN chats c ON c.id=l.cid "
                 "WHERE uid=" + w->quote(uid) +
-                " AND c.chatroom=false"
+                " AND c.chatroom=false "
+                "ORDER BY cid ASC"
             );
 
 
@@ -369,7 +370,7 @@ std::list<chatList> Database::getChatsByUid(int uid){
 
         //get all messages to this chat
         pqxx::result messages = w->exec(
-                        "SELECT m.id, u.email as from, cid as to, content as message, created_at FROM messages m JOIN users u on u.id=m.uid WHERE cid=" + w->quote(chat["id"].as<int>())
+                        "SELECT m.id, u.email as from, cid as to, content as message, created_at FROM messages m JOIN users u on u.id=m.uid WHERE cid=" + w->quote(chat["id"].as<int>()) + " ORDER BY id ASC"
                     );
         //put every message in a message struct to store in chat struct
         for(auto cmsg: messages){
