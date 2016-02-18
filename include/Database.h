@@ -62,6 +62,7 @@ public:
 	void chatroomNewMessage(rapidjson::Document &doc);
     int newMessage(int uid, int cid, std::string msg, bool transmitted);
     messageContainer getMessage(int mid);
+    void setMessageTransmitted(int mid, bool transmitted);
 	void setStatus(rapidjson::Document &doc);
 	void setOperator(rapidjson::Document &doc);
     std::list<foundUsers> getSearchedUsers(std::string search, int uid);
