@@ -1,168 +1,273 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <diagram program="umlet" version="14.1.1">
-  <zoom_level>10</zoom_level>
+  <zoom_level>9</zoom_level>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>650</x>
-      <y>60</y>
-      <w>290</w>
-      <h>260</h>
-    </coordinates>
-    <panel_attributes>Client
---
--server:Server
--session:int
--status:string
--isAdmin:bool?????
--Friendlist:Collection&lt;Client&gt;
--Blocklist:Collection&lt;Client&gt;
---
-+login(string, hash)
-+logout()
-+sendmessage(int, int, string)
-+addNewFriend(int)
-+removeFriend(int)
-+blockClient(int)
-+changeStatus(string)
-+decodeBase64(string)???????
-</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <id>UMLClass</id>
-    <coordinates>
-      <x>650</x>
-      <y>470</y>
-      <w>210</w>
-      <h>60</h>
-    </coordinates>
-    <panel_attributes>Message_Parser
---
-+parseMessage(string)</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <id>UMLClass</id>
-    <coordinates>
-      <x>650</x>
-      <y>550</y>
-      <w>260</w>
-      <h>350</h>
+      <x>747</x>
+      <y>45</y>
+      <w>477</w>
+      <h>711</h>
     </coordinates>
     <panel_attributes>Database
 --
--connection:Connection
+-*conn:connection
+-*w:nontransaction
 --
-+registerClient()
-+addFriend()
-+removeFriend()
-+createChatroom()
-+removeChatroom()
-+chatroomAddClient()
-+chatroomRemoveClient()
-+chatroomNewMessage()
-+newMessage()
-+setStatus()
-+setOperator()
-+getFriendshipRequests(): list
-+getNewOfflineMessages(): list
-+loginClient()
-+logoutClient()</panel_attributes>
++Database()
++~Database()
++connect():bool
++registerClient(rapidjson::Document&amp;):bool
++loginClient(rapidjson::Document&amp;):bool
++logoutClient(int):void
++addFriendToChat(string, string):void
++friendRequest(int, int):bool
++removeRequest(int, int):bool
++removeFriend(int, int):void
++createChatroom(rapidjson::Document&amp;):void
++removeChatroom(rapidjson::Document&amp;):void
++chatroomRemoveClient(rapidjson::Document&amp;):void
++chatroomAddClient(rapidjson::Document&amp;):void
++chatroomNewMessage(rapidjson::Document&amp;):void
++newMessage(int, int, std::string, bool):int
++getMessage(int):messageContainer
++setMessageTransmitted(int, bool):void
++setStatus(rapidjson::Document&amp;):void
++setOperator(rapidjson::Document&amp;):void
++getSearchedUsers(std::string, int):std::list&lt;foundUsers&gt;
++getNewFriendshipRequests(rapidjson::Document&amp;):std::list&lt;std::string&gt; 
++getNewOfflineMessages(rapidjson::Document&amp;):std::list&lt;std::string&gt; 
++getFriendlist(int):std::list&lt;friendListUser&gt;
++getFriendListUserFromID(int, int):friendListUser 
++getFrindIds(int):std::vector&lt;int&gt;
++getUserIDFromSession(int):int
++getSessionIDFromUser(int):int
++userOnline(int):bool
++getPubClientInformation(int)foundUsers
++setSessionID(int , int):void
++setFriendRequestTransmition(int, int):void
++setFriendRequestTransmition(int):void
++acceptFriendRequest(int, int):void
++getFriendRequests(int):std::list&lt;foundUsers&gt;
++createChat(int, int):int
++getChatsByUid(int):std::list&lt;chatList&gt;
++getChatById(int):chatList
++getNickname(int):std::string
++getEmail(int):std::string
++getUserID(std::string):std::string
++getUserID(int, int)std::vector&lt;int&gt;
++getUserDataFrom(std::string, std::map&lt;std::string, std::string&gt;&amp;):void 
++belongsChatIDToUser(int):bool
++getAllOnlineUsersOfChatroom(int, std::vector&lt;int&gt;&amp;):void </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>0</x>
-      <y>370</y>
-      <w>350</w>
-      <h>220</h>
+      <x>117</x>
+      <y>45</y>
+      <w>450</w>
+      <h>342</h>
     </coordinates>
     <panel_attributes>WSServer
 --
+-m_next_sessionid:int 
+-m_server:server
+-tls:server_tls
+-m_connections:con_list
+-ios:boost::asio::io_service
 --
--websocketpp::config::asio_tls server_tls
--boost::asio::io_service ios
---
-+run(tls_port)
-+on_message()
-+on_open()
-+on_close()
-+on_tls_init(connection_hdl) -&gt; context_ptr
-</panel_attributes>
++WSServer()
++run(uint16_t, uint16_t):void
++on_message(connection_hdl):void
++on_open(connection_hdl):void
++on_close(connection_hdl):void
++on_tls_init(connection_hdl):context_ptr
++get_data_from_hdl(connection_hdl):connection_data&amp;
++stopServer():void
++get_hdl_from_session(int):connection_hdl 
+-response(string, string, vector&lt;pair&lt;string, string&gt;&gt;):const string
+-responseSearchedList(string, string, list&lt;foundUsers&gt;):const string 
+-sendFriendlist(string, string, list&lt;friendListUser&gt;):const string 
+-sendChats(string, string, list&lt;chatList&gt;):const string 
+-createError(const exception&amp;, string):const string 
+-readTemplate(string):const string 
+-buildTemplateJson(string, string);</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>340</x>
-      <y>130</y>
-      <w>330</w>
-      <h>270</h>
-    </coordinates>
-    <panel_attributes>lt=-&gt;&gt;&gt;
-Collection: Clients
-r2=0..*
-</panel_attributes>
-    <additional_attributes>10.0;250.0;310.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>340</x>
-      <y>420</y>
-      <w>330</w>
-      <h>100</h>
+      <x>558</x>
+      <y>45</y>
+      <w>207</w>
+      <h>63</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;&lt;-
-Perser:Parser
+m2=-db:Database
 r1=1</panel_attributes>
-    <additional_attributes>310.0;80.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>340</x>
-      <y>490</y>
-      <w>330</w>
-      <h>120</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;&lt;&lt;-
-
-
-Database:DBO
-r1=1</panel_attributes>
-    <additional_attributes>310.0;100.0;10.0;10.0</additional_attributes>
+    <additional_attributes>210.0;20.0;10.0;40.0</additional_attributes>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>650</x>
-      <y>340</y>
-      <w>210</w>
-      <h>110</h>
+      <x>414</x>
+      <y>396</y>
+      <w>189</w>
+      <h>198</h>
     </coordinates>
-    <panel_attributes>Chatroom
+    <panel_attributes>&lt;&lt;Struct&gt;&gt;
+friendListUser
 --
--clientlist:Collection&lt;Client&gt;
--id:int
++id:int
++nickname:string
++email:string 
++online: bool
++firstname:string 
++lastname:string 
++birthday:string 
++imageb64:string 
++cid:string 
++chatname:string 
++chatstatusmsg:string </panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>414</x>
+      <y>711</y>
+      <w>189</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Struct&gt;&gt;
+foundUser
 --
-+addClient()
-+removeClient()</panel_attributes>
++email:string 
++nickname:string </panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>414</x>
+      <y>792</y>
+      <w>189</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Struct&gt;&gt;
+messageContainer
+--
++id:int
++messageFrom:string
++messageTo:int
++message:string
++created_at:string</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>414</x>
+      <y>603</y>
+      <w>189</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Struct&gt;&gt;
+chatList
+--
++id:int
++name:string
++status:string
++messages:vector&lt;messageContainer&gt;</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>340</x>
-      <y>380</y>
-      <w>330</w>
-      <h>50</h>
+      <x>594</x>
+      <y>90</y>
+      <w>171</w>
+      <h>342</h>
     </coordinates>
-    <panel_attributes>lt=-&gt;&gt;&gt;
-Collection:Chatrooms
-r2=0..*</panel_attributes>
-    <additional_attributes>10.0;30.0;310.0;20.0</additional_attributes>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;360.0;170.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>594</x>
+      <y>297</y>
+      <w>171</w>
+      <h>342</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;360.0;170.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>594</x>
+      <y>414</y>
+      <w>171</w>
+      <h>342</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;360.0;170.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>594</x>
+      <y>495</y>
+      <w>171</w>
+      <h>342</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;360.0;170.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>171</x>
+      <y>378</y>
+      <w>261</w>
+      <h>450</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>270.0;480.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>207</x>
+      <y>378</y>
+      <w>225</w>
+      <h>378</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>230.0;400.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>270</x>
+      <y>378</y>
+      <w>162</w>
+      <h>261</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>160.0;270.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>342</x>
+      <y>378</y>
+      <w>90</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>80.0;60.0;10.0;10.0</additional_attributes>
   </element>
 </diagram>
